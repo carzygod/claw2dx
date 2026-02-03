@@ -1,0 +1,39 @@
+﻿{
+    "manifest_version": 3,
+    "name": "Live2D Overlay for x.com",
+    "version": "0.1.0",
+    "description": "在 x.com 页面右下角显示 Live2D 模型并提供控制台。",
+    "host_permissions": [
+        "https://x.com/*",
+        "https://*.x.com/*"
+    ],
+    "permissions": [],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://x.com/*",
+                "https://*.x.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "styles.css",
+                "lib/live2d.min.js",
+                "dist/live2d-helper.min.js",
+                "init-live2d.js",
+                "patch-live2d-helper.js",
+                "assets/**"
+            ],
+            "matches": [
+                "https://x.com/*",
+                "https://*.x.com/*"
+            ]
+        }
+    ]
+}
