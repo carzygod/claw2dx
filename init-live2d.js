@@ -3,7 +3,6 @@
     const ROOT_ID = 'live2d-extension-root';
     const MODEL_PATH = 'assets/models/asuna/asuna_01/asuna_01.model.json';
     const SOUND_PATH = 'assets/sound/friend_06.ogg';
-    const MAX_LOG_ENTRIES = 18;
 
     const scriptEl = document.currentScript || document.getElementById(SCRIPT_ID);
     const extensionBase = (scriptEl && scriptEl.dataset && scriptEl.dataset.extensionBase) || window.__live2dExtensionBase || '';
@@ -87,10 +86,83 @@
         buttons.className = 'live2d-control-buttons';
         panel.append(buttons);
 
-        const logArea = document.createElement('div');
-        logArea.className = 'live2d-console-log';
-        logArea.setAttribute('aria-live', 'polite');
-        panel.append(logArea);
+        const expressionSection = document.createElement('div');
+        expressionSection.className = 'live2d-section';
+        const expressionTitle = document.createElement('div');
+        expressionTitle.className = 'live2d-section-title';
+        expressionTitle.textContent = '表情';
+        const expressionButtons = document.createElement('div');
+        expressionButtons.className = 'live2d-action-grid';
+        expressionButtons.textContent = '等待模型加载';
+        expressionSection.append(expressionTitle, expressionButtons);
+        panel.append(expressionSection);
+
+        const motionSection = document.createElement('div');
+        motionSection.className = 'live2d-section';
+        const motionTitle = document.createElement('div');
+        motionTitle.className = 'live2d-section-title';
+        motionTitle.textContent = '身体动作';
+        const motionButtons = document.createElement('div');
+        motionButtons.className = 'live2d-action-grid';
+        motionButtons.textContent = '等待模型加载';
+        motionSection.append(motionTitle, motionButtons);
+        panel.append(motionSection);
+
+        const createActionButton = (label, handler) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = label;
+            button.addEventListener('click', handler);
+            return button;
+        };
+
+        const populateExpressionButtons = () => {
+            expressionButtons.innerHTML = '';
+            if (!modelRef || !modelRef.modelSetting) {
+                expressionButtons.textContent = '加载中...';
+                return;
+            }
+            const total = modelRef.modelSetting.getExpressionNum();
+            if (!total) {
+                expressionButtons.textContent = '暂无表情';
+                return;
+            }
+            for (let index = 0; index < total; index++) {
+                const name = modelRef.modelSetting.getExpressionName(index) || `表情 ${index + 1}`;
+                expressionButtons.appendChild(createActionButton(name, () => {
+                    helper.setExpression(name);
+                    status.textContent = `表情：${name}`;
+                }));
+            }
+        };
+
+        const populateMotionButtons = () => {
+            motionButtons.innerHTML = '';
+            if (!modelRef || !modelRef.modelSetting) {
+                motionButtons.textContent = '加载中...';
+                return;
+            }
+            const groups = [LAppDefine.MOTION_GROUP_TAP_BODY, ''];
+            let added = 0;
+            groups.forEach((group) => {
+                const count = modelRef.modelSetting.getMotionNum(group);
+                if (count <= 0) {
+                    return;
+                }
+                for (let index = 0; index < count; index++) {
+                    const file = modelRef.modelSetting.getMotionFile(group, index) || `${group || '默认'} ${index + 1}`;
+                    const label = file.split('/').pop() || `动作 ${index + 1}`;
+                    motionButtons.appendChild(createActionButton(label, () => {
+                        modelRef.startMotion(group, index, LAppDefine.PRIORITY_FORCE);
+                        status.textContent = `动作：${label}`;
+                    }));
+                    added++;
+                }
+            });
+            if (!added) {
+                motionButtons.textContent = '暂无身体动作';
+            }
+        };
         root.append(panel);
 
         const helper = new Live2DHelper({ canvas: canvas.id });
@@ -98,16 +170,6 @@
 
         let modelRef = null;
         let headFollowing = false;
-
-        const log = (message) => {
-            const entry = document.createElement('div');
-            entry.textContent = message;
-            logArea.appendChild(entry);
-            while (logArea.childElementCount > MAX_LOG_ENTRIES) {
-                logArea.removeChild(logArea.firstChild);
-            }
-            logArea.scrollTop = logArea.scrollHeight;
-        };
 
         const playRandomMotion = (candidates, priority = LAppDefine.PRIORITY_FORCE) => {
             if (!modelRef || !modelRef.modelSetting) {
@@ -132,11 +194,12 @@
             modelRef = helper.live2DMgr.models[0];
             if (modelRef) {
                 playRandomMotion([LAppDefine.MOTION_GROUP_IDLE, ''], LAppDefine.PRIORITY_IDLE);
+                populateExpressionButtons();
+                populateMotionButtons();
             }
             helper.startTurnHead();
             headFollowing = true;
-            status.textContent = '已就绪';
-            log('模型就绪，头部跟随开启');
+            status.textContent = '模型已就绪';
         });
 
         const addAction = (label, handler) => {
@@ -149,65 +212,26 @@
 
         const toggleHead = () => {
             if (!modelRef) {
-                log('模型尚未就绪');
+                status.textContent = '模型尚未就绪';
                 return;
             }
             if (headFollowing) {
                 helper.stopTurnHead();
                 headFollowing = false;
                 status.textContent = '头部静止';
-                log('头部跟随已暂停');
             }
             else {
                 helper.startTurnHead();
                 headFollowing = true;
                 status.textContent = '头部跟随';
-                log('头部跟随已激活');
             }
         };
-
-        addAction('随机表情', () => {
-            if (!modelRef) {
-                log('模型尚未就绪');
-                return;
-            }
-            helper.setRandomExpression();
-            log('触发随机表情');
-        });
-
-        addAction('空闲动作', () => {
-            if (!modelRef) {
-                log('模型尚未就绪');
-                return;
-            }
-            const played = playRandomMotion([LAppDefine.MOTION_GROUP_IDLE, '']);
-            if (played !== null) {
-                log('播放空闲动作');
-            }
-            else {
-                log('当前模型没有空闲动作可播放');
-            }
-        });
-
-        addAction('身体点击', () => {
-            if (!modelRef) {
-                log('模型尚未就绪');
-                return;
-            }
-            const played = playRandomMotion([LAppDefine.MOTION_GROUP_TAP_BODY, '']);
-            if (played !== null) {
-                log('播放身体点击动作');
-            }
-            else {
-                log('当前模型没有身体点击动作可用');
-            }
-        });
 
         addAction('头部跟随', toggleHead);
 
         addAction('播放语音', () => {
             helper.playSound(soundUrl);
-            log('播放语音');
+            status.textContent = '播放语音';
         });
 
         const handlePointer = (event) => {
