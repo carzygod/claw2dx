@@ -11,6 +11,14 @@
         {
             name: 'Koharu',
             path: 'assets/models/koharu/koharu.model.json'
+        },
+        {
+            name: 'Shizuku',
+            path: 'assets/models/shizuku/shizuku.model.json'
+        },
+        {
+            name: 'Wanko',
+            path: 'assets/models/wanko/wanko.model.json'
         }
     ];
 
