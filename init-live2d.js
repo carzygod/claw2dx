@@ -19,6 +19,50 @@
         {
             name: 'Wanko',
             path: 'assets/models/wanko/wanko.model.json'
+        },
+        {
+            name: 'Chitose',
+            path: 'assets/models/chitose/chitose.model.json'
+        },
+        {
+            name: 'Haru02',
+            path: 'assets/models/haru02/haru02.model.json'
+        },
+        {
+            name: 'Hijiki',
+            path: 'assets/models/hijiki/hijiki.model.json'
+        },
+        {
+            name: 'Izumi',
+            path: 'assets/models/izumi/izumi.model.json'
+        },
+        {
+            name: 'Miku',
+            path: 'assets/models/miku/miku.model.json'
+        },
+        {
+            name: 'Nico',
+            path: 'assets/models/nico/nico.model.json'
+        },
+        {
+            name: 'Ni-J',
+            path: 'assets/models/ni-j/ni-j.model.json'
+        },
+        {
+            name: 'Nipsilon',
+            path: 'assets/models/nipsilon/nipsilon.model.json'
+        },
+        {
+            name: 'Nito',
+            path: 'assets/models/nito/nito.model.json'
+        },
+        {
+            name: 'Tororo',
+            path: 'assets/models/tororo/tororo.model.json'
+        },
+        {
+            name: 'Tsumiki',
+            path: 'assets/models/tsumiki/tsumiki.model.json'
         }
     ];
 
