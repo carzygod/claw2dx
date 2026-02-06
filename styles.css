@@ -107,6 +107,30 @@
     text-transform: uppercase;
     opacity: 0.7;
     margin-bottom: 6px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.live2d-section-title:hover {
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+}
+
+.live2d-section-content {
+    display: none;
+    /* Collapsed by default */
+    margin-top: 5px;
+}
+
+.live2d-section-content.expanded {
+    display: block;
+    /* Expanded state */
 }
 
 .live2d-action-grid {
