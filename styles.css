@@ -142,3 +142,17 @@
         width: 100%;
     }
 }
+
+@media (max-height: 600px) {
+    #live2d-extension-root {
+        transform: scale(0.85);
+        transform-origin: bottom left;
+    }
+}
+
+@media (max-height: 480px) {
+    #live2d-extension-root {
+        transform: scale(0.7);
+        transform-origin: bottom left;
+    }
+}
