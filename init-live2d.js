@@ -285,11 +285,7 @@
             }
         });
 
-        document.addEventListener('mousemove', (e) => {
-            if (headFollowing && isModelVisible) {
-                // simple head follow logic could go here if implemented in helper
-            }
-        });
+
 
         // Initial Load
         loadCurrentModel();
