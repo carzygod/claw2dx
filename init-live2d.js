@@ -85,9 +85,46 @@
         canvas.style.pointerEvents = 'auto'; // Allow interaction
 
         root.appendChild(canvas);
+
+        // 3. Create Speech Bubble
+        const bubble = document.createElement('div');
+        bubble.id = 'live2d-bubble';
+        bubble.style.position = 'absolute';
+        bubble.style.bottom = '450px'; // Lowered per user request
+        bubble.style.left = '50px';
+        bubble.style.width = '200px';
+        bubble.style.padding = '10px';
+        bubble.style.backgroundColor = 'rgba(255, 255, 255, 0.5)'; // 50% opacity
+        bubble.style.border = '2px solid rgba(51, 51, 51, 0.5)'; // Semi-transparent border
+        bubble.style.borderRadius = '10px';
+        bubble.style.color = '#000'; // Keep text black for readability
+        bubble.style.fontWeight = 'bold'; // Bold text for better contrast
+        bubble.style.fontFamily = 'sans-serif';
+        bubble.style.fontSize = '14px';
+        bubble.style.textAlign = 'center';
+        bubble.style.display = 'none'; // Hidden by default
+        bubble.style.zIndex = '1000001';
+        bubble.style.pointerEvents = 'none';
+        bubble.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+
+        // Bubble tail (optional, simple css triangle)
+        const tail = document.createElement('div');
+        tail.style.position = 'absolute';
+        tail.style.bottom = '-10px';
+        tail.style.left = '50%';
+        tail.style.marginLeft = '-10px';
+        tail.style.width = '0';
+        tail.style.height = '0';
+        tail.style.borderLeft = '10px solid transparent';
+        tail.style.borderRight = '10px solid transparent';
+        tail.style.borderTop = '10px solid rgba(255, 255, 255, 0.5)'; // Match bubble opacity
+        bubble.appendChild(tail);
+
+        root.appendChild(bubble);
+
         document.body.appendChild(root);
 
-        // 3. Create Toggle Button (Floating Icon)
+        // 4. Create Toggle Button (Floating Icon)
         const toggleBtn = document.createElement('div');
         toggleBtn.id = TOGGLE_BTN_ID;
         toggleBtn.textContent = '👁️';
@@ -211,6 +248,38 @@
                         break;
                     case 'START_MOTION':
                         helper.startMotion(data.group, data.index, 0);
+                        break;
+                    case 'SHOW_MESSAGE':
+                        const bubble = document.getElementById('live2d-bubble');
+                        if (bubble) {
+                            // Remove tail (child) to set text, then re-add? Or specific text container.
+                            // Simpler: just set textContent but we lose tail.
+                            // Better: use innerText for the main part, but preserve structure?
+                            // Let's us a span inside bubble for text.
+                            // Actually, let's just rebuild content for simplicity or use a text node.
+                            // Re-creating structure:
+                            bubble.innerHTML = '';
+                            bubble.appendChild(document.createTextNode(data.text));
+                            const newTail = document.createElement('div');
+                            newTail.style.position = 'absolute';
+                            newTail.style.bottom = '-10px';
+                            newTail.style.left = '50%';
+                            newTail.style.marginLeft = '-10px';
+                            newTail.style.width = '0';
+                            newTail.style.height = '0';
+                            newTail.style.borderLeft = '10px solid transparent';
+                            newTail.style.borderRight = '10px solid transparent';
+                            newTail.style.borderTop = '10px solid rgba(255, 255, 255, 0.5)';
+                            bubble.appendChild(newTail);
+
+                            bubble.style.display = 'block';
+
+                            // Auto-hide after 5 seconds
+                            if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
+                            window.bubbleTimeout = setTimeout(() => {
+                                bubble.style.display = 'none';
+                            }, 5000);
+                        }
                         break;
                 }
             }

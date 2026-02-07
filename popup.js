@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSwitch = document.getElementById('btn-switch');
     const btnFollow = document.getElementById('btn-follow');
     const btnVoice = document.getElementById('btn-voice');
+    const btnSendMsg = document.getElementById('btn-send-msg');
+    const msgInput = document.getElementById('msg-input');
 
     // --- Message Passing Helper ---
     function sendCommand(cmd, data = {}) {
@@ -79,6 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     btnFollow.onclick = () => sendCommand('TOGGLE_FOLLOW');
     btnVoice.onclick = () => sendCommand('PLAY_VOICE');
+
+    btnSendMsg.onclick = () => {
+        const text = msgInput.value.trim();
+        if (text) {
+            sendCommand('SHOW_MESSAGE', { text });
+            msgInput.value = '';
+        }
+    };
 
     // Initial Query
     sendCommand('GET_STATE');
