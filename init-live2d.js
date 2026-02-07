@@ -5,10 +5,6 @@
     // Model Definitions
     const MODELS = [
         {
-            name: 'Asuna',
-            path: 'assets/models/asuna/asuna_01/asuna_01.model.json'
-        },
-        {
             name: 'Koharu',
             path: 'assets/models/koharu/koharu.model.json'
         },
@@ -21,48 +17,12 @@
             path: 'assets/models/wanko/wanko.model.json'
         },
         {
-            name: 'Chitose',
-            path: 'assets/models/chitose/chitose.model.json'
-        },
-        {
             name: 'Haru02',
             path: 'assets/models/haru02/haru02.model.json'
         },
         {
-            name: 'Hijiki',
-            path: 'assets/models/hijiki/hijiki.model.json'
-        },
-        {
             name: 'Izumi',
             path: 'assets/models/izumi/izumi.model.json'
-        },
-        {
-            name: 'Miku',
-            path: 'assets/models/miku/miku.model.json'
-        },
-        {
-            name: 'Nico',
-            path: 'assets/models/nico/nico.model.json'
-        },
-        {
-            name: 'Ni-J',
-            path: 'assets/models/ni-j/ni-j.model.json'
-        },
-        {
-            name: 'Nipsilon',
-            path: 'assets/models/nipsilon/nipsilon.model.json'
-        },
-        {
-            name: 'Nito',
-            path: 'assets/models/nito/nito.model.json'
-        },
-        {
-            name: 'Tororo',
-            path: 'assets/models/tororo/tororo.model.json'
-        },
-        {
-            name: 'Tsumiki',
-            path: 'assets/models/tsumiki/tsumiki.model.json'
         }
     ];
 
@@ -236,13 +196,10 @@
             motionsSection.style.display = 'none';
 
             // IMPORTANT: Completely release all old models
-            // releaseModel(gl, index) is the correct signature
             try {
                 const mgr = helper.live2DMgr;
                 const gl = helper.gl;
 
-                // Release from last to first to avoid index shifting issues during splice
-                // mgr.numModels() gives current count
                 if (mgr && gl) {
                     for (let i = mgr.numModels() - 1; i >= 0; i--) {
                         mgr.releaseModel(gl, i);
@@ -267,8 +224,12 @@
                         expressionsSection.style.display = 'block';
                         exprNames.forEach(name => {
                             const btn = document.createElement('button');
-                            btn.textContent = name;
-                            btn.onclick = () => helper.setExpression(name, 0);
+                            // Display name: strip .exp.json or .json if present for cleaner UI
+                            btn.textContent = name.replace(/(\.exp)?\.json$/i, '');
+                            btn.onclick = () => {
+                                console.log('Setting expression:', name);
+                                helper.setExpression(name, 0);
+                            };
                             expressionsGrid.appendChild(btn);
                         });
                     }
@@ -276,7 +237,19 @@
 
                 // 2. Generate Motion Buttons
                 if (internalModel.modelSetting) {
-                    const groups = ['', 'idle', 'tap_body', 'flick_head', 'pinch_in', 'pinch_out', 'shake'];
+                    // Comprehensive list of groups to check
+                    // 'null' is crucial for Izumi
+                    // camelCase variants added just in case
+                    const groups = [
+                        '',
+                        'idle',
+                        'tap_body', 'tapBody',
+                        'flick_head', 'flickHead',
+                        'pinch_in', 'pinchIn',
+                        'pinch_out', 'pinchOut',
+                        'shake',
+                        'null'
+                    ];
                     let hasMotion = false;
 
                     groups.forEach(group => {
@@ -285,9 +258,16 @@
                             hasMotion = true;
                             for (let i = 0; i < count; i++) {
                                 const btn = document.createElement('button');
-                                const label = group === '' ? `Action ${i + 1}` : `${group} ${i + 1}`;
+                                let label;
+                                if (group === '') label = `Action ${i + 1}`;
+                                else if (group === 'null') label = `Interact ${i + 1}`;
+                                else label = `${group} ${i + 1}`;
+
                                 btn.textContent = label;
-                                btn.onclick = () => helper.startMotion(group, i, 0);
+                                btn.onclick = () => {
+                                    console.log('Starting motion:', group, i);
+                                    helper.startMotion(group, i, 0);
+                                };
                                 motionsGrid.appendChild(btn);
                             }
                         }
