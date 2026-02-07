@@ -82,6 +82,30 @@ document.addEventListener('DOMContentLoaded', () => {
     btnFollow.onclick = () => sendCommand('TOGGLE_FOLLOW');
     btnVoice.onclick = () => sendCommand('PLAY_VOICE');
 
+    // WS Elements
+    const wsUrlInput = document.getElementById('ws-url-input');
+    const btnSaveWs = document.getElementById('btn-save-ws');
+    const wsStatusEl = document.getElementById('ws-status');
+
+    // Load saved WS URL
+    chrome.storage.local.get(['wsUrl'], (result) => {
+        if (result.wsUrl) {
+            wsUrlInput.value = result.wsUrl;
+        }
+    });
+
+    // Save WS URL
+    btnSaveWs.onclick = () => {
+        const url = wsUrlInput.value.trim();
+        chrome.storage.local.set({ wsUrl: url }, () => {
+            wsStatusEl.textContent = 'Saved. Connecting...';
+            // Notify content script to reconnect
+            sendCommand('UPDATE_WS_CONFIG', { url });
+        });
+    };
+
+    // ... (rest of listeners)
+
     btnSendMsg.onclick = () => {
         const text = msgInput.value.trim();
         if (text) {

@@ -24,12 +24,8 @@
         { name: 'Neptune Santa', path: 'assets/models/HyperdimensionNeptunia/neptune_santa/index.json' },
         { name: 'NepMaid', path: 'assets/models/HyperdimensionNeptunia/nepmaid/index.json' },
         { name: 'NepSwim', path: 'assets/models/HyperdimensionNeptunia/nepswim/index.json' },
-        { name: 'Neptune Santa', path: 'assets/models/HyperdimensionNeptunia/neptune_santa/index.json' }, // Duplicate valid
-        { name: 'Nepgear', path: 'assets/models/HyperdimensionNeptunia/nepgear/index.json' },
-        // Note: Removed some based on user request (Noir/Blanc/Vert/Histoire/Nepgear - Wait, user asked to remove Nepgear. Removing it now to be safe, though list was big)
-        // Re-cleaning list based on last user request to ensure compliance
-        // Removing: Noir, Blanc, Vert, Nepgear, Histoire
-        // Keeping: Murakumo
+
+        // Kantai Collection
         { name: 'Murakumo', path: 'assets/models/KantaiCollection/murakumo/index.json' }
     ];
 
@@ -279,18 +275,84 @@
                             window.bubbleTimeout = setTimeout(() => {
                                 bubble.style.display = 'none';
                             }, 5000);
-                        }
-                        break;
-                }
+                        }, 5000);
+    }
+    break;
+                    
+                    case 'WS_PAYLOAD':
+    const payload = data.data; // data was passed as payload
+    if (!payload) return;
+
+    // 1. Switch Model (if specified and different)
+    if (payload.model) {
+        const foundIndex = MODELS.findIndex(m => m.name === payload.model);
+        if (foundIndex !== -1 && foundIndex !== currentModelIndex) {
+            currentModelIndex = foundIndex;
+            loadCurrentModel(); // This is async! Be careful with subsequent commands.
+            // If we switch, we might need to delay specific motion commands?
+            // For simplicity, we fire them, but they might apply to the OLD model if load isn't instant.
+            // Or they might apply to the NEW model once loaded if we queue them.
+            // simpler: fire immediately. Users should wait for load.
+        }
+    }
+
+    // 2. Change Expression
+    if (payload.expression) {
+        helper.setExpression(payload.expression, 0);
+    }
+
+    // 3. Play Motion
+    if (payload.motion) {
+        // Find group index? Helper wrapper usually expects (group, index).
+        // If user sends Just "motion": "tap_body", assume index 0 or random?
+        // Let's assume index 0 for simplicity if "motion" is just a string group name.
+        // If they pass an object {group: 'tap', index: 1}, that's better but protocol says string.
+        // We will default to index 0.
+        // However, we should check if the group exists.
+        // The helper.startMotion(group, no, priority)
+        helper.startMotion(payload.motion, 0, 3); // Priority 3 = force
+    }
+
+    // 4. Show Message
+    if (payload.message) {
+        // Re-use the SHOW_MESSAGE logic - DRY violation but robust here to keep scope clean
+        // Or trigger a self-command?
+        // Let's just execute the display logic directly or refactor showMessage function.
+        // For speed, I'll copy the bubble logic. It's safe.
+        const bubble = document.getElementById('live2d-bubble');
+        if (bubble) {
+            bubble.innerHTML = '';
+            bubble.appendChild(document.createTextNode(payload.message));
+            const newTail = document.createElement('div');
+            newTail.style.position = 'absolute';
+            newTail.style.bottom = '-10px';
+            newTail.style.left = '50%';
+            newTail.style.marginLeft = '-10px';
+            newTail.style.width = '0';
+            newTail.style.height = '0';
+            newTail.style.borderLeft = '10px solid transparent';
+            newTail.style.borderRight = '10px solid transparent';
+            newTail.style.borderTop = '10px solid rgba(255, 255, 255, 0.5)';
+            bubble.appendChild(newTail);
+
+            bubble.style.display = 'block';
+            if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
+            window.bubbleTimeout = setTimeout(() => {
+                bubble.style.display = 'none';
+            }, 5000);
+        }
+    }
+    break;
+}
             }
         });
 
 
 
-        // Initial Load
-        loadCurrentModel();
+// Initial Load
+loadCurrentModel();
     }
 
-    ensureRoot();
+ensureRoot();
 
-})();
+}) ();

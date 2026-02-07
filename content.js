@@ -60,8 +60,86 @@ function loadScript(index) {
 
 // --- Message Bridge ---
 // 1. From Popup (Background/Runtime) -> Page (Window)
+// --- WebSocket Client (Content Script Context) ---
+let ws = null;
+let currentWsUrl = '';
+let reconnectTimer = null;
+
+function connectWebSocket(url) {
+    if (!url) return;
+    if (ws) {
+        ws.close();
+    }
+
+    currentWsUrl = url;
+    console.log('[Live2D Extension] Connecting to WebSocket:', url);
+
+    try {
+        ws = new WebSocket(url);
+
+        ws.onopen = () => {
+            console.log('[Live2D Extension] WebSocket Connected');
+            // Optional: send hello
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('[Live2D Extension] WS Message:', data);
+                // Forward directly to page
+                window.postMessage({
+                    type: 'LIVE2D_COMMAND_FROM_EXTENSION',
+                    payload: { cmd: 'WS_PAYLOAD', data: data }
+                }, '*');
+            } catch (e) {
+                console.error('[Live2D Extension] Invalid JSON from WS:', e);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('[Live2D Extension] WebSocket Closed. Reconnecting in 5s...');
+            scheduleReconnect();
+        };
+
+        ws.onerror = (err) => {
+            console.error('[Live2D Extension] WebSocket Error:', err);
+            ws.close(); // Ensure cleanup
+        };
+
+    } catch (e) {
+        console.error('[Live2D Extension] WebSocket Connection Failed:', e);
+        scheduleReconnect();
+    }
+}
+
+function scheduleReconnect() {
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+        if (currentWsUrl) connectWebSocket(currentWsUrl);
+    }, 5000);
+}
+
+// Initialize WS from storage
+chrome.storage.local.get(['wsUrl'], (result) => {
+    if (result.wsUrl) {
+        connectWebSocket(result.wsUrl);
+    }
+});
+
+// Update Listener (from Popup -> Background -> Content, relying on existing message bridge)
+// The popup sends "UPDATE_WS_CONFIG" via "LIVE2D_COMMAND" channel.
+// We intercept it here in the content script listener before (or in parallel) forwarding?
+// Actually, let's hook into the existing listener to catch this specific command.
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'LIVE2D_COMMAND') {
+        if (request.cmd === 'UPDATE_WS_CONFIG') {
+            connectWebSocket(request.data.url);
+            sendResponse({ status: 'updated' });
+            return;
+        }
+
+        // Forward others to window as usual
         window.postMessage({ type: 'LIVE2D_COMMAND_FROM_EXTENSION', payload: request }, '*');
         sendResponse({ status: 'forwarded' });
     }

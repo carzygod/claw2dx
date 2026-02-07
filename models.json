@@ -1,0 +1,263 @@
+[
+    {
+        "path":  "assets/models/koharu/koharu.model.json",
+        "expressions":  {
+
+                        },
+        "name":  "Koharu",
+        "motions":  {
+
+                    }
+    },
+    {
+        "path":  "assets/models/shizuku/shizuku.model.json",
+        "expressions":  {
+                            "tag_2":  "f03",
+                            "tag_0":  "f01",
+                            "tag_1":  "f02",
+                            "tag_3":  "f04"
+                        },
+        "name":  "Shizuku",
+        "motions":  {
+                        "tag_2":  "pinch_in",
+                        "tag_1":  "tap_body",
+                        "tag_5":  "flick_head",
+                        "tag_4":  "shake",
+                        "tag_0":  "idle",
+                        "tag_3":  "pinch_out"
+                    }
+    },
+    {
+        "path":  "assets/models/wanko/wanko.model.json",
+        "expressions":  {
+
+                        },
+        "name":  "Wanko",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "shake"
+                    }
+    },
+    {
+        "path":  "assets/models/haru02/haru02.model.json",
+        "expressions":  {
+                            "tag_2":  "f03",
+                            "tag_1":  "f02",
+                            "tag_5":  "f06",
+                            "tag_7":  "f08",
+                            "tag_4":  "f05",
+                            "tag_6":  "f07",
+                            "tag_0":  "f01",
+                            "tag_3":  "f04"
+                        },
+        "name":  "Haru02",
+        "motions":  {
+                        "tag_2":  "pinch_in",
+                        "tag_1":  "tap_body",
+                        "tag_5":  "flick_head",
+                        "tag_4":  "shake",
+                        "tag_0":  "idle",
+                        "tag_3":  "pinch_out"
+                    }
+    },
+    {
+        "path":  "assets/models/izumi/izumi.model.json",
+        "expressions":  {
+                            "tag_2":  "f03.exp.json",
+                            "tag_1":  "f02.exp.json",
+                            "tag_5":  "f06.exp.json",
+                            "tag_4":  "f05.exp.json",
+                            "tag_6":  "f07.exp.json",
+                            "tag_0":  "f01.exp.json",
+                            "tag_3":  "f04.exp.json"
+                        },
+        "name":  "Izumi",
+        "motions":  {
+                        "tag_1":  "null",
+                        "tag_0":  "idle"
+                    }
+    },
+    {
+        "path":  "assets/models/Potion-Maker/Pio/index.json",
+        "expressions":  {
+
+                        },
+        "name":  "Pio",
+        "motions":  {
+                        "tag_2":  "flick_head",
+                        "tag_0":  "idle",
+                        "tag_1":  "sleepy",
+                        "tag_3":  "tap_body"
+                    }
+    },
+    {
+        "path":  "assets/models/Potion-Maker/Tia/index.json",
+        "expressions":  {
+
+                        },
+        "name":  "Tia",
+        "motions":  {
+                        "tag_2":  "flick_head",
+                        "tag_0":  "idle",
+                        "tag_1":  "sleepy",
+                        "tag_3":  "tap_body"
+                    }
+    },
+    {
+        "path":  "assets/models/bilibili-live/22/index.json",
+        "expressions":  {
+
+                        },
+        "name":  "22 (Bilibili)",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head",
+                        "tag_3":  "thanking"
+                    }
+    },
+    {
+        "path":  "assets/models/bilibili-live/33/index.json",
+        "expressions":  {
+
+                        },
+        "name":  "33 (Bilibili)",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head",
+                        "tag_3":  "thanking"
+                    }
+    },
+    {
+        "path":  "assets/models/ShizukuTalk/shizuku-48/index.json",
+        "expressions":  {
+                            "tag_2":  "f03",
+                            "tag_0":  "f01",
+                            "tag_1":  "f02",
+                            "tag_3":  "f04"
+                        },
+        "name":  "Shizuku 48",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/ShizukuTalk/shizuku-pajama/index.json",
+        "expressions":  {
+                            "tag_2":  "f03",
+                            "tag_0":  "f01",
+                            "tag_1":  "f02",
+                            "tag_3":  "f04"
+                        },
+        "name":  "Shizuku Pajama",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/HyperdimensionNeptunia/neptune_classic/index.json",
+        "expressions":  {
+                            "tag_2":  "unhappy",
+                            "tag_1":  "happy",
+                            "tag_5":  "enjoy",
+                            "tag_4":  "deformed",
+                            "tag_0":  "normal",
+                            "tag_3":  "kira"
+                        },
+        "name":  "Neptune Classic",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/HyperdimensionNeptunia/nepnep/index.json",
+        "expressions":  {
+                            "tag_2":  "unhappy",
+                            "tag_1":  "happy",
+                            "tag_5":  "enjoy",
+                            "tag_4":  "deformed",
+                            "tag_0":  "normal",
+                            "tag_3":  "kira"
+                        },
+        "name":  "NepNep",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/HyperdimensionNeptunia/neptune_santa/index.json",
+        "expressions":  {
+                            "tag_2":  "unhappy",
+                            "tag_1":  "happy",
+                            "tag_5":  "enjoy",
+                            "tag_4":  "deformed",
+                            "tag_0":  "normal",
+                            "tag_3":  "kira"
+                        },
+        "name":  "Neptune Santa",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/HyperdimensionNeptunia/nepmaid/index.json",
+        "expressions":  {
+                            "tag_2":  "unhappy",
+                            "tag_1":  "happy",
+                            "tag_5":  "enjoy",
+                            "tag_4":  "deformed",
+                            "tag_0":  "normal",
+                            "tag_3":  "kira"
+                        },
+        "name":  "NepMaid",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/HyperdimensionNeptunia/nepswim/index.json",
+        "expressions":  {
+                            "tag_2":  "unhappy",
+                            "tag_1":  "happy",
+                            "tag_5":  "enjoy",
+                            "tag_4":  "deformed",
+                            "tag_0":  "normal",
+                            "tag_3":  "kira"
+                        },
+        "name":  "NepSwim",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    },
+    {
+        "path":  "assets/models/KantaiCollection/murakumo/index.json",
+        "expressions":  {
+                            "tag_2":  "f03",
+                            "tag_0":  "f01",
+                            "tag_1":  "f02",
+                            "tag_3":  "f04"
+                        },
+        "name":  "Murakumo",
+        "motions":  {
+                        "tag_2":  "tap_body",
+                        "tag_0":  "idle",
+                        "tag_1":  "flick_head"
+                    }
+    }
+]
