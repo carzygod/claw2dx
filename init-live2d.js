@@ -25,21 +25,6 @@
         { name: 'Neptune Santa', path: 'assets/models/HyperdimensionNeptunia/neptune_santa/index.json' },
         { name: 'NepMaid', path: 'assets/models/HyperdimensionNeptunia/nepmaid/index.json' },
         { name: 'NepSwim', path: 'assets/models/HyperdimensionNeptunia/nepswim/index.json' },
-        { name: 'Noir Classic', path: 'assets/models/HyperdimensionNeptunia/noir_classic/index.json' },
-        { name: 'Noir', path: 'assets/models/HyperdimensionNeptunia/noir/index.json' },
-        { name: 'Noir Santa', path: 'assets/models/HyperdimensionNeptunia/noir_santa/index.json' },
-        { name: 'Noire Swim', path: 'assets/models/HyperdimensionNeptunia/noireswim/index.json' },
-        { name: 'Blanc Classic', path: 'assets/models/HyperdimensionNeptunia/blanc_classic/index.json' },
-        { name: 'Blanc Normal', path: 'assets/models/HyperdimensionNeptunia/blanc_normal/index.json' },
-        { name: 'Blanc Swim', path: 'assets/models/HyperdimensionNeptunia/blanc_swimwear/index.json' },
-        { name: 'Vert Classic', path: 'assets/models/HyperdimensionNeptunia/vert_classic/index.json' },
-        { name: 'Vert Normal', path: 'assets/models/HyperdimensionNeptunia/vert_normal/index.json' },
-        { name: 'Vert Swim', path: 'assets/models/HyperdimensionNeptunia/vert_swimwear/index.json' },
-        { name: 'Nepgear', path: 'assets/models/HyperdimensionNeptunia/nepgear/index.json' },
-        { name: 'Nepgear Extra', path: 'assets/models/HyperdimensionNeptunia/nepgear_extra/index.json' },
-        { name: 'Nepgear Swim', path: 'assets/models/HyperdimensionNeptunia/nepgearswim/index.json' },
-        { name: 'Histoire', path: 'assets/models/HyperdimensionNeptunia/histoire/index.json' },
-        { name: 'Histoire (No Hover)', path: 'assets/models/HyperdimensionNeptunia/histoirenohover/index.json' },
 
         // Kantai Collection
         { name: 'Murakumo', path: 'assets/models/KantaiCollection/murakumo/index.json' }
