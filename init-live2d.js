@@ -4,26 +4,45 @@
 
     // Model Definitions
     const MODELS = [
-        {
-            name: 'Koharu',
-            path: 'assets/models/koharu/koharu.model.json'
-        },
-        {
-            name: 'Shizuku',
-            path: 'assets/models/shizuku/shizuku.model.json'
-        },
-        {
-            name: 'Wanko',
-            path: 'assets/models/wanko/wanko.model.json'
-        },
-        {
-            name: 'Haru02',
-            path: 'assets/models/haru02/haru02.model.json'
-        },
-        {
-            name: 'Izumi',
-            path: 'assets/models/izumi/izumi.model.json'
-        }
+        // --- Original Kept Models ---
+        { name: 'Koharu', path: 'assets/models/koharu/koharu.model.json' },
+        { name: 'Shizuku', path: 'assets/models/shizuku/shizuku.model.json' },
+        { name: 'Wanko', path: 'assets/models/wanko/wanko.model.json' },
+        { name: 'Haru02', path: 'assets/models/haru02/haru02.model.json' },
+        { name: 'Izumi', path: 'assets/models/izumi/izumi.model.json' },
+
+        // --- fghrsh/live2d_api Models ---
+        { name: 'Pio', path: 'assets/models/Potion-Maker/Pio/index.json' },
+        { name: 'Tia', path: 'assets/models/Potion-Maker/Tia/index.json' },
+        { name: '22 (Bilibili)', path: 'assets/models/bilibili-live/22/index.json' },
+        { name: '33 (Bilibili)', path: 'assets/models/bilibili-live/33/index.json' },
+        { name: 'Shizuku 48', path: 'assets/models/ShizukuTalk/shizuku-48/index.json' },
+        { name: 'Shizuku Pajama', path: 'assets/models/ShizukuTalk/shizuku-pajama/index.json' },
+
+        // Hyperdimension Neptunia
+        { name: 'Neptune Classic', path: 'assets/models/HyperdimensionNeptunia/neptune_classic/index.json' },
+        { name: 'NepNep', path: 'assets/models/HyperdimensionNeptunia/nepnep/index.json' },
+        { name: 'Neptune Santa', path: 'assets/models/HyperdimensionNeptunia/neptune_santa/index.json' },
+        { name: 'NepMaid', path: 'assets/models/HyperdimensionNeptunia/nepmaid/index.json' },
+        { name: 'NepSwim', path: 'assets/models/HyperdimensionNeptunia/nepswim/index.json' },
+        { name: 'Noir Classic', path: 'assets/models/HyperdimensionNeptunia/noir_classic/index.json' },
+        { name: 'Noir', path: 'assets/models/HyperdimensionNeptunia/noir/index.json' },
+        { name: 'Noir Santa', path: 'assets/models/HyperdimensionNeptunia/noir_santa/index.json' },
+        { name: 'Noire Swim', path: 'assets/models/HyperdimensionNeptunia/noireswim/index.json' },
+        { name: 'Blanc Classic', path: 'assets/models/HyperdimensionNeptunia/blanc_classic/index.json' },
+        { name: 'Blanc Normal', path: 'assets/models/HyperdimensionNeptunia/blanc_normal/index.json' },
+        { name: 'Blanc Swim', path: 'assets/models/HyperdimensionNeptunia/blanc_swimwear/index.json' },
+        { name: 'Vert Classic', path: 'assets/models/HyperdimensionNeptunia/vert_classic/index.json' },
+        { name: 'Vert Normal', path: 'assets/models/HyperdimensionNeptunia/vert_normal/index.json' },
+        { name: 'Vert Swim', path: 'assets/models/HyperdimensionNeptunia/vert_swimwear/index.json' },
+        { name: 'Nepgear', path: 'assets/models/HyperdimensionNeptunia/nepgear/index.json' },
+        { name: 'Nepgear Extra', path: 'assets/models/HyperdimensionNeptunia/nepgear_extra/index.json' },
+        { name: 'Nepgear Swim', path: 'assets/models/HyperdimensionNeptunia/nepgearswim/index.json' },
+        { name: 'Histoire', path: 'assets/models/HyperdimensionNeptunia/histoire/index.json' },
+        { name: 'Histoire (No Hover)', path: 'assets/models/HyperdimensionNeptunia/histoirenohover/index.json' },
+
+        // Kantai Collection
+        { name: 'Murakumo', path: 'assets/models/KantaiCollection/murakumo/index.json' }
     ];
 
     let currentModelIndex = 0;
@@ -238,8 +257,7 @@
                 // 2. Generate Motion Buttons
                 if (internalModel.modelSetting) {
                     // Comprehensive list of groups to check
-                    // 'null' is crucial for Izumi
-                    // camelCase variants added just in case
+                    // 'null' is crucial for Izumi, maybe others
                     const groups = [
                         '',
                         'idle',
