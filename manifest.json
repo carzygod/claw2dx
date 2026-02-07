@@ -7,6 +7,9 @@
         "https://x.com/*",
         "https://*.x.com/*"
     ],
+    "action": {
+        "default_popup": "popup.html"
+    },
     "permissions": [],
     "content_scripts": [
         {

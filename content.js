@@ -58,3 +58,25 @@ function loadScript(index) {
     (document.head || document.documentElement).appendChild(script);
 }
 
+// --- Message Bridge ---
+// 1. From Popup (Background/Runtime) -> Page (Window)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'LIVE2D_COMMAND') {
+        window.postMessage({ type: 'LIVE2D_COMMAND_FROM_EXTENSION', payload: request }, '*');
+        sendResponse({ status: 'forwarded' });
+    }
+});
+
+// 2. From Page (Window) -> Popup (Runtime)
+window.addEventListener('message', (event) => {
+    if (event.source !== window) return;
+    if (event.data.type === 'LIVE2D_STATE_UPDATE_FROM_PAGE') {
+        chrome.runtime.sendMessage({
+            type: 'LIVE2D_STATE_UPDATE',
+            data: event.data.payload
+        }).catch(() => {
+            // Popup might be closed, ignore error
+        });
+    }
+});
+
