@@ -19,12 +19,24 @@
                         },
         "name":  "Shizuku",
         "motions":  {
-                        "tag_2":  "pinch_in",
-                        "tag_1":  "tap_body",
-                        "tag_5":  "flick_head",
-                        "tag_4":  "shake",
-                        "tag_0":  "idle",
-                        "tag_3":  "pinch_out"
+                        "tag_0":  "idle:0",
+                        "tag_9":  "pinch_out:0",
+                        "tag_7":  "pinch_in:1",
+                        "tag_5":  "tap_body:2",
+                        "tag_12":  "shake:0",
+                        "tag_1":  "idle:1",
+                        "tag_6":  "pinch_in:0",
+                        "tag_4":  "tap_body:1",
+                        "tag_13":  "shake:1",
+                        "tag_11":  "pinch_out:2",
+                        "tag_14":  "shake:2",
+                        "tag_15":  "flick_head:0",
+                        "tag_3":  "tap_body:0",
+                        "tag_10":  "pinch_out:1",
+                        "tag_16":  "flick_head:1",
+                        "tag_17":  "flick_head:2",
+                        "tag_8":  "pinch_in:2",
+                        "tag_2":  "idle:2"
                     }
     },
     {
@@ -34,9 +46,15 @@
                         },
         "name":  "Wanko",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "shake"
+                        "tag_2":  "idle:2",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "tap_body:2",
+                        "tag_5":  "shake:1",
+                        "tag_7":  "tap_body:1",
+                        "tag_4":  "shake:0",
+                        "tag_6":  "tap_body:0",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "idle:3"
                     }
     },
     {
@@ -53,12 +71,16 @@
                         },
         "name":  "Haru02",
         "motions":  {
-                        "tag_2":  "pinch_in",
-                        "tag_1":  "tap_body",
-                        "tag_5":  "flick_head",
-                        "tag_4":  "shake",
-                        "tag_0":  "idle",
-                        "tag_3":  "pinch_out"
+                        "tag_2":  "idle:2",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "shake:0",
+                        "tag_5":  "tap_body:2",
+                        "tag_7":  "pinch_out:0",
+                        "tag_4":  "tap_body:1",
+                        "tag_9":  "flick_head:0",
+                        "tag_6":  "pinch_in:0",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "tap_body:0"
                     }
     },
     {
@@ -74,8 +96,20 @@
                         },
         "name":  "Izumi",
         "motions":  {
-                        "tag_1":  "null",
-                        "tag_0":  "idle"
+                        "tag_0":  "idle:0",
+                        "tag_9":  "null:5",
+                        "tag_7":  "null:3",
+                        "tag_5":  "null:1",
+                        "tag_12":  "null:8",
+                        "tag_1":  "idle:1",
+                        "tag_6":  "null:2",
+                        "tag_4":  "null:0",
+                        "tag_13":  "null:9",
+                        "tag_11":  "null:7",
+                        "tag_3":  "idle:3",
+                        "tag_10":  "null:6",
+                        "tag_8":  "null:4",
+                        "tag_2":  "idle:2"
                     }
     },
     {
@@ -85,10 +119,28 @@
                         },
         "name":  "Pio",
         "motions":  {
-                        "tag_2":  "flick_head",
-                        "tag_0":  "idle",
-                        "tag_1":  "sleepy",
-                        "tag_3":  "tap_body"
+                        "tag_0":  "idle:0",
+                        "tag_9":  "flick_head:2",
+                        "tag_7":  "flick_head:0",
+                        "tag_5":  "idle:5",
+                        "tag_12":  "flick_head:5",
+                        "tag_1":  "idle:1",
+                        "tag_6":  "sleepy:0",
+                        "tag_4":  "idle:4",
+                        "tag_21":  "tap_body:8",
+                        "tag_13":  "tap_body:0",
+                        "tag_11":  "flick_head:4",
+                        "tag_14":  "tap_body:1",
+                        "tag_19":  "tap_body:6",
+                        "tag_15":  "tap_body:2",
+                        "tag_20":  "tap_body:7",
+                        "tag_3":  "idle:3",
+                        "tag_18":  "tap_body:5",
+                        "tag_10":  "flick_head:3",
+                        "tag_16":  "tap_body:3",
+                        "tag_17":  "tap_body:4",
+                        "tag_8":  "flick_head:1",
+                        "tag_2":  "idle:2"
                     }
     },
     {
@@ -98,10 +150,29 @@
                         },
         "name":  "Tia",
         "motions":  {
-                        "tag_2":  "flick_head",
-                        "tag_0":  "idle",
-                        "tag_1":  "sleepy",
-                        "tag_3":  "tap_body"
+                        "tag_0":  "idle:0",
+                        "tag_22":  "tap_body:8",
+                        "tag_9":  "flick_head:1",
+                        "tag_7":  "sleepy:0",
+                        "tag_5":  "idle:5",
+                        "tag_12":  "flick_head:4",
+                        "tag_1":  "idle:1",
+                        "tag_6":  "idle:6",
+                        "tag_4":  "idle:4",
+                        "tag_21":  "tap_body:7",
+                        "tag_13":  "flick_head:5",
+                        "tag_11":  "flick_head:3",
+                        "tag_14":  "tap_body:0",
+                        "tag_19":  "tap_body:5",
+                        "tag_15":  "tap_body:1",
+                        "tag_20":  "tap_body:6",
+                        "tag_3":  "idle:3",
+                        "tag_18":  "tap_body:4",
+                        "tag_10":  "flick_head:2",
+                        "tag_16":  "tap_body:2",
+                        "tag_17":  "tap_body:3",
+                        "tag_8":  "flick_head:0",
+                        "tag_2":  "idle:2"
                     }
     },
     {
@@ -111,10 +182,12 @@
                         },
         "name":  "22 (Bilibili)",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head",
-                        "tag_3":  "thanking"
+                        "tag_2":  "idle:2",
+                        "tag_1":  "idle:1",
+                        "tag_5":  "thanking:0",
+                        "tag_4":  "tap_body:0",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -124,10 +197,12 @@
                         },
         "name":  "33 (Bilibili)",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head",
-                        "tag_3":  "thanking"
+                        "tag_2":  "idle:2",
+                        "tag_1":  "idle:1",
+                        "tag_5":  "thanking:0",
+                        "tag_4":  "tap_body:0",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -140,9 +215,44 @@
                         },
         "name":  "Shizuku 48",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_19":  "idle:19",
+                        "tag_35":  "tap_body:1",
+                        "tag_1":  "idle:1",
+                        "tag_13":  "idle:13",
+                        "tag_24":  "idle:24",
+                        "tag_6":  "idle:6",
+                        "tag_17":  "idle:17",
+                        "tag_34":  "tap_body:0",
+                        "tag_2":  "idle:2",
+                        "tag_12":  "idle:12",
+                        "tag_25":  "idle:25",
+                        "tag_7":  "idle:7",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "idle:3",
+                        "tag_8":  "idle:8",
+                        "tag_18":  "idle:18",
+                        "tag_10":  "idle:10",
+                        "tag_21":  "idle:21",
+                        "tag_28":  "idle:28",
+                        "tag_16":  "idle:16",
+                        "tag_30":  "flick_head:0",
+                        "tag_29":  "idle:29",
+                        "tag_14":  "idle:14",
+                        "tag_22":  "idle:22",
+                        "tag_37":  "tap_body:3",
+                        "tag_11":  "idle:11",
+                        "tag_26":  "idle:26",
+                        "tag_20":  "idle:20",
+                        "tag_4":  "idle:4",
+                        "tag_23":  "idle:23",
+                        "tag_32":  "flick_head:2",
+                        "tag_31":  "flick_head:1",
+                        "tag_5":  "idle:5",
+                        "tag_33":  "flick_head:3",
+                        "tag_9":  "idle:9",
+                        "tag_15":  "idle:15",
+                        "tag_36":  "tap_body:2",
+                        "tag_27":  "idle:27"
                     }
     },
     {
@@ -155,9 +265,44 @@
                         },
         "name":  "Shizuku Pajama",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_19":  "idle:19",
+                        "tag_35":  "tap_body:1",
+                        "tag_1":  "idle:1",
+                        "tag_13":  "idle:13",
+                        "tag_24":  "idle:24",
+                        "tag_6":  "idle:6",
+                        "tag_17":  "idle:17",
+                        "tag_34":  "tap_body:0",
+                        "tag_2":  "idle:2",
+                        "tag_12":  "idle:12",
+                        "tag_25":  "idle:25",
+                        "tag_7":  "idle:7",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "idle:3",
+                        "tag_8":  "idle:8",
+                        "tag_18":  "idle:18",
+                        "tag_10":  "idle:10",
+                        "tag_21":  "idle:21",
+                        "tag_28":  "idle:28",
+                        "tag_16":  "idle:16",
+                        "tag_30":  "flick_head:0",
+                        "tag_29":  "idle:29",
+                        "tag_14":  "idle:14",
+                        "tag_22":  "idle:22",
+                        "tag_37":  "tap_body:3",
+                        "tag_11":  "idle:11",
+                        "tag_26":  "idle:26",
+                        "tag_20":  "idle:20",
+                        "tag_4":  "idle:4",
+                        "tag_23":  "idle:23",
+                        "tag_32":  "flick_head:2",
+                        "tag_31":  "flick_head:1",
+                        "tag_5":  "idle:5",
+                        "tag_33":  "flick_head:3",
+                        "tag_9":  "idle:9",
+                        "tag_15":  "idle:15",
+                        "tag_36":  "tap_body:2",
+                        "tag_27":  "idle:27"
                     }
     },
     {
@@ -172,9 +317,18 @@
                         },
         "name":  "Neptune Classic",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_10":  "tap_body:3",
+                        "tag_2":  "idle:2",
+                        "tag_11":  "tap_body:4",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "tap_body:1",
+                        "tag_5":  "flick_head:2",
+                        "tag_7":  "tap_body:0",
+                        "tag_4":  "flick_head:1",
+                        "tag_9":  "tap_body:2",
+                        "tag_6":  "flick_head:3",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -189,9 +343,18 @@
                         },
         "name":  "NepNep",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_10":  "tap_body:3",
+                        "tag_2":  "idle:2",
+                        "tag_11":  "tap_body:4",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "tap_body:1",
+                        "tag_5":  "flick_head:2",
+                        "tag_7":  "tap_body:0",
+                        "tag_4":  "flick_head:1",
+                        "tag_9":  "tap_body:2",
+                        "tag_6":  "flick_head:3",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -206,9 +369,18 @@
                         },
         "name":  "Neptune Santa",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_10":  "tap_body:3",
+                        "tag_2":  "idle:2",
+                        "tag_11":  "tap_body:4",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "tap_body:1",
+                        "tag_5":  "flick_head:2",
+                        "tag_7":  "tap_body:0",
+                        "tag_4":  "flick_head:1",
+                        "tag_9":  "tap_body:2",
+                        "tag_6":  "flick_head:3",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -223,9 +395,18 @@
                         },
         "name":  "NepMaid",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_10":  "tap_body:3",
+                        "tag_2":  "idle:2",
+                        "tag_11":  "tap_body:4",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "tap_body:1",
+                        "tag_5":  "flick_head:2",
+                        "tag_7":  "tap_body:0",
+                        "tag_4":  "flick_head:1",
+                        "tag_9":  "tap_body:2",
+                        "tag_6":  "flick_head:3",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -240,9 +421,18 @@
                         },
         "name":  "NepSwim",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_10":  "tap_body:3",
+                        "tag_2":  "idle:2",
+                        "tag_11":  "tap_body:4",
+                        "tag_1":  "idle:1",
+                        "tag_8":  "tap_body:1",
+                        "tag_5":  "flick_head:2",
+                        "tag_7":  "tap_body:0",
+                        "tag_4":  "flick_head:1",
+                        "tag_9":  "tap_body:2",
+                        "tag_6":  "flick_head:3",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     },
     {
@@ -255,9 +445,14 @@
                         },
         "name":  "Murakumo",
         "motions":  {
-                        "tag_2":  "tap_body",
-                        "tag_0":  "idle",
-                        "tag_1":  "flick_head"
+                        "tag_2":  "idle:2",
+                        "tag_1":  "idle:1",
+                        "tag_5":  "tap_body:0",
+                        "tag_7":  "tap_body:2",
+                        "tag_4":  "flick_head:1",
+                        "tag_6":  "tap_body:1",
+                        "tag_0":  "idle:0",
+                        "tag_3":  "flick_head:0"
                     }
     }
 ]

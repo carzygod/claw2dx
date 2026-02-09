@@ -47,10 +47,25 @@ foreach ($m in $models) {
         
         # Check standard 'motions' object
         if ($jsonContent.motions) {
-            $motionList = $jsonContent.motions.PSObject.Properties.Name
-            foreach ($mot in $motionList) {
-                $motionsObj["tag_$motionIndex"] = $mot
-                $motionIndex++
+            $motionsDict = $jsonContent.motions
+            # Get list of group names
+            $groupNames = $motionsDict.PSObject.Properties.Name
+            
+            foreach ($group in $groupNames) {
+                $groupData = $motionsDict.$group
+                
+                # Check if it is an array and has multiple items
+                if ($groupData -is [System.Array]) {
+                    for ($i = 0; $i -lt $groupData.Count; $i++) {
+                        $motionsObj["tag_$motionIndex"] = "$group`:$i"
+                        $motionIndex++
+                    }
+                }
+                else {
+                    # Fallback for single item or non-array
+                    $motionsObj["tag_$motionIndex"] = "$group`:0"
+                    $motionIndex++
+                }
             }
         } 
 
