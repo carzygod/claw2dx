@@ -20,6 +20,8 @@
                 "https://*.x.com/*"
             ],
             "js": [
+                "lib/tweetnacl.min.js",
+                "security-utils.js",
                 "content.js"
             ],
             "run_at": "document_idle"

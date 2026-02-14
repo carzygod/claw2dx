@@ -1,7 +1,19 @@
-﻿const ROOT_ID = 'live2d-extension-root';
 const INIT_SCRIPT_ID = 'live2d-extension-init-script';
 const CSS_PATH = 'styles.css';
 const SCRIPTS = ['lib/live2d.min.js', 'dist/live2d-helper.min.js', 'patch-live2d-helper.js', 'init-live2d.js'];
+
+let ws = null;
+let currentWsUrl = '';
+let reconnectTimer = null;
+let shouldReconnect = true;
+let wsStatus = 'disconnected';
+let wsStatusDetail = 'Not connected';
+let isRegistered = false;
+let keyPair = null;
+let whitelist = [];
+let usedNonceQueue = [];
+let usedNonceSet = new Set();
+let noncePersistTimer = null;
 
 (function () {
     if (window.live2dExtensionInjected) {
@@ -16,6 +28,7 @@ const SCRIPTS = ['lib/live2d.min.js', 'dist/live2d-helper.min.js', 'patch-live2d
 
     injectCss();
     loadScript(0);
+    initializeSecureRuntime();
 })();
 
 function injectCss() {
@@ -58,103 +71,349 @@ function loadScript(index) {
     (document.head || document.documentElement).appendChild(script);
 }
 
-// --- Message Bridge ---
-// 1. From Popup (Background/Runtime) -> Page (Window)
-// --- WebSocket Client (Content Script Context) ---
-let ws = null;
-let currentWsUrl = '';
-let reconnectTimer = null;
-
-function connectWebSocket(url) {
-    if (!url) return;
-    if (ws) {
-        ws.close();
-    }
-
-    currentWsUrl = url;
-    console.log('[Live2D Extension] Connecting to WebSocket:', url);
-
+async function initializeSecureRuntime() {
     try {
-        ws = new WebSocket(url);
+        keyPair = await window.Live2DSecurity.ensureKeyPair();
+        whitelist = await window.Live2DSecurity.getWhitelist();
+        usedNonceQueue = await window.Live2DSecurity.getUsedNonceEntries();
+        usedNonceSet = new Set(usedNonceQueue);
 
-        ws.onopen = () => {
-            console.log('[Live2D Extension] WebSocket Connected');
-            // Optional: send hello
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                console.log('[Live2D Extension] WS Message:', data);
-                // Forward directly to page
-                window.postMessage({
-                    type: 'LIVE2D_COMMAND_FROM_EXTENSION',
-                    payload: { cmd: 'WS_PAYLOAD', data: data }
-                }, '*');
-            } catch (e) {
-                console.error('[Live2D Extension] Invalid JSON from WS:', e);
+        chrome.storage.onChanged.addListener((changes, areaName) => {
+            if (areaName !== 'local') {
+                return;
             }
-        };
+            if (changes[window.Live2DSecurity.STORAGE_WHITELIST_KEY]) {
+                const updated = changes[window.Live2DSecurity.STORAGE_WHITELIST_KEY].newValue;
+                whitelist = Array.isArray(updated) ? updated : [];
+            }
+        });
 
-        ws.onclose = () => {
-            console.log('[Live2D Extension] WebSocket Closed. Reconnecting in 5s...');
-            scheduleReconnect();
-        };
-
-        ws.onerror = (err) => {
-            console.error('[Live2D Extension] WebSocket Error:', err);
-            ws.close(); // Ensure cleanup
-        };
-
-    } catch (e) {
-        console.error('[Live2D Extension] WebSocket Connection Failed:', e);
-        scheduleReconnect();
+        chrome.storage.local.get(['wsUrl'], (result) => {
+            if (result.wsUrl) {
+                currentWsUrl = result.wsUrl;
+                connectWebSocket(currentWsUrl);
+            } else {
+                publishWsStatus();
+            }
+        });
+    } catch (error) {
+        console.error('[Live2D Extension] Security init failed:', error);
+        wsStatus = 'error';
+        wsStatusDetail = 'Security initialization failed';
+        publishWsStatus();
     }
+}
+
+function publishWsStatus() {
+    const payload = {
+        status: wsStatus,
+        detail: wsStatusDetail,
+        url: currentWsUrl,
+        registered: isRegistered,
+        publicKey: keyPair ? keyPair.publicKey : ''
+    };
+
+    chrome.runtime.sendMessage({ type: 'WS_CONNECTION_STATUS', data: payload }).catch(() => {
+        // Popup may be closed.
+    });
+}
+
+function persistUsedNoncesSoon() {
+    if (noncePersistTimer) {
+        clearTimeout(noncePersistTimer);
+    }
+    noncePersistTimer = setTimeout(() => {
+        window.Live2DSecurity.saveUsedNonceEntries(usedNonceQueue).catch((error) => {
+            console.error('[Live2D Extension] Failed to persist nonce cache:', error);
+        });
+    }, 300);
+}
+
+function addUsedNonce(senderPublicKey, nonce) {
+    const nonceKey = `${senderPublicKey}:${nonce}`;
+    if (usedNonceSet.has(nonceKey)) {
+        return false;
+    }
+
+    usedNonceSet.add(nonceKey);
+    usedNonceQueue.push(nonceKey);
+    while (usedNonceQueue.length > 5000) {
+        const removed = usedNonceQueue.shift();
+        usedNonceSet.delete(removed);
+    }
+    persistUsedNoncesSoon();
+    return true;
+}
+
+function isNonceUsed(senderPublicKey, nonce) {
+    return usedNonceSet.has(`${senderPublicKey}:${nonce}`);
 }
 
 function scheduleReconnect() {
-    if (reconnectTimer) clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(() => {
-        if (currentWsUrl) connectWebSocket(currentWsUrl);
-    }, 5000);
+    if (!shouldReconnect || !currentWsUrl) {
+        return;
+    }
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+    }
+    reconnectTimer = setTimeout(() => connectWebSocket(currentWsUrl), 5000);
 }
 
-// Initialize WS from storage
-chrome.storage.local.get(['wsUrl'], (result) => {
-    if (result.wsUrl) {
-        connectWebSocket(result.wsUrl);
+function connectWebSocket(url) {
+    const nextUrl = (url || '').trim();
+    if (!nextUrl) {
+        wsStatus = 'disconnected';
+        wsStatusDetail = 'WebSocket URL is empty';
+        publishWsStatus();
+        return;
     }
-});
 
-// Update Listener (from Popup -> Background -> Content, relying on existing message bridge)
-// The popup sends "UPDATE_WS_CONFIG" via "LIVE2D_COMMAND" channel.
-// We intercept it here in the content script listener before (or in parallel) forwarding?
-// Actually, let's hook into the existing listener to catch this specific command.
+    currentWsUrl = nextUrl;
+    shouldReconnect = true;
+    isRegistered = false;
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === 'LIVE2D_COMMAND') {
-        if (request.cmd === 'UPDATE_WS_CONFIG') {
-            connectWebSocket(request.data.url);
-            sendResponse({ status: 'updated' });
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
+
+    if (ws) {
+        try {
+            ws.close();
+        } catch (error) {
+            // Ignore close errors
+        }
+    }
+
+    wsStatus = 'connecting';
+    wsStatusDetail = 'Connecting...';
+    publishWsStatus();
+
+    let socket;
+    try {
+        socket = new WebSocket(nextUrl);
+    } catch (error) {
+        wsStatus = 'error';
+        wsStatusDetail = `Connection failed: ${error.message}`;
+        publishWsStatus();
+        scheduleReconnect();
+        return;
+    }
+
+    ws = socket;
+
+    socket.onopen = () => {
+        if (ws !== socket) {
             return;
         }
+        wsStatus = 'connected';
+        wsStatusDetail = 'Connected, registering plugin...';
+        publishWsStatus();
+        sendRegistration();
+    };
 
-        // Forward others to window as usual
-        window.postMessage({ type: 'LIVE2D_COMMAND_FROM_EXTENSION', payload: request }, '*');
-        sendResponse({ status: 'forwarded' });
+    socket.onmessage = (event) => {
+        if (ws !== socket) {
+            return;
+        }
+        handleIncomingMessage(event.data);
+    };
+
+    socket.onclose = () => {
+        if (ws !== socket) {
+            return;
+        }
+        ws = null;
+        isRegistered = false;
+        wsStatus = 'disconnected';
+        wsStatusDetail = shouldReconnect ? 'Disconnected, waiting to reconnect...' : 'Disconnected';
+        publishWsStatus();
+        scheduleReconnect();
+    };
+
+    socket.onerror = () => {
+        if (ws !== socket) {
+            return;
+        }
+        wsStatus = 'error';
+        wsStatusDetail = 'WebSocket error';
+        publishWsStatus();
+    };
+}
+
+function disconnectWebSocket() {
+    shouldReconnect = false;
+    isRegistered = false;
+
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
     }
+
+    if (ws) {
+        ws.close();
+        ws = null;
+    }
+
+    wsStatus = 'disconnected';
+    wsStatusDetail = 'Disconnected by user';
+    publishWsStatus();
+}
+
+function sendRegistration() {
+    if (!ws || ws.readyState !== WebSocket.OPEN || !keyPair) {
+        return;
+    }
+
+    const registerMessage = {
+        type: 'PLUGIN_REGISTER',
+        publicKey: keyPair.publicKey,
+        nonce: window.Live2DSecurity.createNonce(),
+        timestamp: Date.now()
+    };
+
+    registerMessage.signature = window.Live2DSecurity.signObject(keyPair.privateKey, {
+        type: registerMessage.type,
+        publicKey: registerMessage.publicKey,
+        nonce: registerMessage.nonce,
+        timestamp: registerMessage.timestamp
+    });
+
+    ws.send(JSON.stringify(registerMessage));
+}
+
+function handleIncomingMessage(rawMessage) {
+    let data;
+    try {
+        data = JSON.parse(rawMessage);
+    } catch (error) {
+        console.warn('[Live2D Extension] Ignore non-JSON message');
+        return;
+    }
+
+    if (!data || typeof data !== 'object') {
+        return;
+    }
+
+    if (data.type === 'REGISTERED') {
+        isRegistered = true;
+        wsStatus = 'connected';
+        wsStatusDetail = 'Registered';
+        publishWsStatus();
+        return;
+    }
+
+    if (data.type === 'ERROR') {
+        wsStatus = 'error';
+        wsStatusDetail = data.message || 'Relay reported error';
+        publishWsStatus();
+        return;
+    }
+
+    if (data.type !== 'SECURE_MESSAGE') {
+        return;
+    }
+
+    if (!keyPair) {
+        return;
+    }
+
+    const senderPublicKey = (data.senderPublicKey || '').trim();
+    const recipientPublicKey = (data.recipientPublicKey || '').trim();
+    const nonce = (data.nonce || '').trim();
+    const signature = (data.signature || '').trim();
+    const payload = data.payload;
+
+    if (!senderPublicKey || !recipientPublicKey || !nonce || !signature || typeof payload !== 'object' || payload === null) {
+        return;
+    }
+
+    if (recipientPublicKey !== keyPair.publicKey) {
+        return;
+    }
+
+    if (!whitelist.includes(senderPublicKey)) {
+        return;
+    }
+
+    if (isNonceUsed(senderPublicKey, nonce)) {
+        return;
+    }
+
+    const verified = window.Live2DSecurity.verifyObject(senderPublicKey, {
+        senderPublicKey,
+        recipientPublicKey,
+        nonce,
+        payload
+    }, signature);
+
+    if (!verified) {
+        return;
+    }
+
+    addUsedNonce(senderPublicKey, nonce);
+
+    window.postMessage({
+        type: 'LIVE2D_COMMAND_FROM_EXTENSION',
+        payload: { cmd: 'WS_PAYLOAD', data: payload }
+    }, '*');
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type !== 'LIVE2D_COMMAND') {
+        return;
+    }
+
+    if (request.cmd === 'UPDATE_WS_CONFIG') {
+        const nextUrl = (request.data && request.data.url ? request.data.url : '').trim();
+        currentWsUrl = nextUrl;
+        chrome.storage.local.set({ wsUrl: nextUrl }, () => {
+            sendResponse({ status: 'saved', wsStatus, wsStatusDetail, registered: isRegistered });
+        });
+        return true;
+    }
+
+    if (request.cmd === 'CONNECT_WS') {
+        const nextUrl = (request.data && request.data.url ? request.data.url : currentWsUrl).trim();
+        if (nextUrl && nextUrl !== currentWsUrl) {
+            chrome.storage.local.set({ wsUrl: nextUrl });
+        }
+        connectWebSocket(nextUrl);
+        sendResponse({ status: 'connecting' });
+        return;
+    }
+
+    if (request.cmd === 'DISCONNECT_WS') {
+        disconnectWebSocket();
+        sendResponse({ status: 'disconnected' });
+        return;
+    }
+
+    if (request.cmd === 'GET_WS_STATUS') {
+        sendResponse({
+            status: wsStatus,
+            detail: wsStatusDetail,
+            url: currentWsUrl,
+            registered: isRegistered,
+            publicKey: keyPair ? keyPair.publicKey : ''
+        });
+        return;
+    }
+
+    window.postMessage({ type: 'LIVE2D_COMMAND_FROM_EXTENSION', payload: request }, '*');
+    sendResponse({ status: 'forwarded' });
 });
 
-// 2. From Page (Window) -> Popup (Runtime)
 window.addEventListener('message', (event) => {
-    if (event.source !== window) return;
+    if (event.source !== window) {
+        return;
+    }
     if (event.data.type === 'LIVE2D_STATE_UPDATE_FROM_PAGE') {
         chrome.runtime.sendMessage({
             type: 'LIVE2D_STATE_UPDATE',
             data: event.data.payload
         }).catch(() => {
-            // Popup might be closed, ignore error
+            // Popup may be closed.
         });
     }
 });
-

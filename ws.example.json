@@ -1,10 +1,22 @@
 {
-    "description": "Live2D Control WebSocket Protocol",
-    "interaction_guide": "1. The extension connects to the provided WebSocket URL upon activation. \n2. The server sends JSON messages to control the model. \n3. Fields are optional; send only what you want to change.",
-    "format": {
-        "model": "ModelName (exact match in list, e.g., 'Haru02', 'Pio', 'Shizuku')",
-        "motion": "MotionGroupName (e.g., 'idle', 'tap_body', 'flick_head', 'shake')",
-        "expression": "ExpressionName (e.g., 'f01', 'f02')",
-        "message": "Text to display in speech bubble"
-    }
+  "register_message": {
+    "type": "PLUGIN_REGISTER",
+    "publicKey": "<plugin-public-key-base64>",
+    "nonce": "<base64-random-nonce>",
+    "timestamp": 1730000000000,
+    "signature": "<signature-base64>"
+  },
+  "secure_direct_message": {
+    "type": "SECURE_DIRECT",
+    "senderPublicKey": "<sender-public-key-base64>",
+    "recipientPublicKey": "<plugin-public-key-base64>",
+    "nonce": "<base64-random-nonce>",
+    "payload": {
+      "model": "Shizuku",
+      "motion": "tag_2",
+      "expression": "f01",
+      "message": "Hello from secure sender"
+    },
+    "signature": "<signature-base64>"
+  }
 }
