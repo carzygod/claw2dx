@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const LOG_PREFIX = '[Live2D Popup]';
+    function log(...args) {
+        console.log(LOG_PREFIX, ...args);
+    }
+    function warn(...args) {
+        console.warn(LOG_PREFIX, ...args);
+    }
+
     const statusEl = document.getElementById('status-msg');
     const modelNameEl = document.getElementById('model-name-display');
     const exprSection = document.getElementById('expressions-section');
@@ -27,34 +35,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     let keyPair = await window.Live2DSecurity.ensureKeyPair();
     let whitelist = await window.Live2DSecurity.getWhitelist();
 
-    function getActiveTabId(callback) {
+    function getActiveTab(callback) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (!tabs[0] || !tabs[0].id) {
-                callback(null);
+            const tab = tabs[0] || null;
+            if (!tab || !tab.id) {
+                callback(null, 'No active tab');
                 return;
             }
-            callback(tabs[0].id);
+            callback(tab, null);
         });
     }
 
     function sendToTab(cmd, data = {}, onResponse) {
-        getActiveTabId((tabId) => {
-            if (!tabId) {
+        log('sendToTab ->', cmd, data);
+        getActiveTab((tab, tabError) => {
+            if (!tab) {
                 statusEl.textContent = 'No active tab found.';
+                warn('sendToTab failed:', tabError, 'cmd=', cmd);
                 if (onResponse) {
                     onResponse(null);
                 }
                 return;
             }
 
+            const tabId = tab.id;
+            const tabUrl = tab.url || '';
+            const isLikelyX = /^https:\/\/(.+\.)?x\.com(\/|$)/.test(tabUrl);
+            if (!isLikelyX) {
+                warn('Active tab may not be supported, will try sendMessage anyway:', tabUrl || '(url unavailable)');
+            }
+
             chrome.tabs.sendMessage(tabId, { type: 'LIVE2D_COMMAND', cmd, data }, (response) => {
                 if (chrome.runtime.lastError) {
-                    statusEl.textContent = 'Error: refresh x.com page first.';
+                    const message = chrome.runtime.lastError.message || 'Unknown runtime error';
+                    const isNoReceiver = /Receiving end does not exist/i.test(message);
+                    statusEl.textContent = 'Error: open/refresh x.com page first.';
+                    updateWsStatus({
+                        status: 'unavailable',
+                        detail: isNoReceiver ? 'No content script receiver. Open x.com and refresh once.' : message
+                    });
+                    warn('sendMessage runtime error:', message, 'cmd=', cmd, 'tab=', tabId);
                     if (onResponse) {
                         onResponse(null);
                     }
                     return;
                 }
+                log('sendToTab <-', cmd, response || {});
                 if (onResponse) {
                     onResponse(response || null);
                 }
@@ -64,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateWsStatus(info) {
         if (!info) {
-            wsStatusEl.textContent = 'Status: unknown';
+            wsStatusEl.textContent = 'Status: unavailable (no response from page)';
             return;
         }
         const detail = info.detail ? ` (${info.detail})` : '';
@@ -125,13 +151,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         whitelist.forEach((pubKey, index) => {
+            let displayKey = pubKey;
+            try {
+                displayKey = window.Live2DSecurity.publicKeyBase64ToBase58(pubKey);
+            } catch (error) {
+                // Keep original text if conversion fails.
+            }
             const row = document.createElement('div');
             row.className = 'list-item';
 
             const keyBox = document.createElement('div');
             keyBox.className = 'mono';
-            keyBox.textContent = maskKey(pubKey);
-            keyBox.title = pubKey;
+            keyBox.textContent = maskKey(displayKey);
+            keyBox.title = displayKey;
 
             const btnRemove = document.createElement('button');
             btnRemove.textContent = 'Delete';
@@ -140,6 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 whitelist = await window.Live2DSecurity.saveWhitelist(whitelist);
                 renderWhitelist();
                 whitelistStatusEl.textContent = 'Whitelist updated.';
+                log('Whitelist key removed. total=', whitelist.length);
             };
 
             row.appendChild(keyBox);
@@ -149,10 +182,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function setPublicKeyView() {
-        publicKeyEl.textContent = keyPair.publicKey;
+        publicKeyEl.textContent = window.Live2DSecurity.publicKeyBase64ToBase58(keyPair.publicKey);
     }
 
     chrome.runtime.onMessage.addListener((message) => {
+        log('runtime message:', message);
         if (!message || typeof message !== 'object') {
             return;
         }
@@ -183,6 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnSaveWs.onclick = () => {
         const url = wsUrlInput.value.trim();
+        log('Saving WS URL:', url);
         chrome.storage.local.set({ wsUrl: url }, () => {
             sendToTab('UPDATE_WS_CONFIG', { url }, () => {
                 statusEl.textContent = 'WebSocket URL saved.';
@@ -192,26 +227,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnConnectWs.onclick = () => {
         const url = wsUrlInput.value.trim();
+        log('Connect clicked, url=', url);
         sendToTab('CONNECT_WS', { url }, () => {
             statusEl.textContent = 'Connecting WebSocket...';
+            setTimeout(() => {
+                sendToTab('GET_WS_STATUS', {}, (response) => updateWsStatus(response || null));
+            }, 500);
         });
     };
 
     btnDisconnectWs.onclick = () => {
+        log('Disconnect clicked');
         sendToTab('DISCONNECT_WS', {}, () => {
             statusEl.textContent = 'Disconnect requested.';
+            setTimeout(() => {
+                sendToTab('GET_WS_STATUS', {}, (response) => updateWsStatus(response || null));
+            }, 300);
         });
     };
 
     btnCopyPub.onclick = async () => {
-        await navigator.clipboard.writeText(keyPair.publicKey);
+        await navigator.clipboard.writeText(window.Live2DSecurity.publicKeyBase64ToBase58(keyPair.publicKey));
+        log('Public key copied');
         statusEl.textContent = 'Public key copied.';
     };
 
     btnExportPriv.onclick = () => {
         const content = JSON.stringify({
-            publicKey: keyPair.publicKey,
-            privateKey: keyPair.privateKey
+            publicKeyBase58: window.Live2DSecurity.publicKeyBase64ToBase58(keyPair.publicKey),
+            privateKeyBase58: window.Live2DSecurity.privateKeyBase64ToBase58(keyPair.privateKey),
+            publicKeyBase64: keyPair.publicKey,
+            privateKeyBase64: keyPair.privateKey
         }, null, 2);
         const blob = new Blob([content], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -220,6 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         a.download = 'live2d-plugin-keypair.json';
         a.click();
         URL.revokeObjectURL(url);
+        log('Private key exported');
         statusEl.textContent = 'Private key exported.';
     };
 
@@ -229,19 +276,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             whitelistStatusEl.textContent = 'Please input a public key.';
             return;
         }
-        if (!window.Live2DSecurity.isValidPublicKey(input)) {
+
+        let normalizedBase64 = '';
+        if (window.Live2DSecurity.isValidPublicKeyBase58(input)) {
+            normalizedBase64 = window.Live2DSecurity.publicKeyBase58ToBase64(input);
+        } else if (window.Live2DSecurity.isValidPublicKey(input)) {
+            normalizedBase64 = input;
+        } else {
             whitelistStatusEl.textContent = 'Invalid public key format.';
+            warn('Rejected whitelist key: invalid format');
             return;
         }
-        if (whitelist.includes(input)) {
+        if (whitelist.includes(normalizedBase64)) {
             whitelistStatusEl.textContent = 'Key already in whitelist.';
             return;
         }
 
-        whitelist.push(input);
+        whitelist.push(normalizedBase64);
         whitelist = await window.Live2DSecurity.saveWhitelist(whitelist);
         whitelistInput.value = '';
         whitelistStatusEl.textContent = 'Key added.';
+        log('Whitelist key added. total=', whitelist.length);
         renderWhitelist();
     };
 
@@ -253,6 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setPublicKeyView();
     renderWhitelist();
+    log('Popup initialized');
 
     sendToTab('GET_STATE');
     sendToTab('GET_WS_STATUS', {}, (response) => updateWsStatus(response || null));

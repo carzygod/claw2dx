@@ -186,6 +186,16 @@
             return resolved || tagOrName;
         }
 
+        function resolveExpression(modelName, tagOrName) {
+            if (!tagOrName || !tagOrName.startsWith('tag_')) return tagOrName;
+
+            const config = modelsConfig.find(m => m.name === modelName);
+            if (!config || !config.expressions) return tagOrName;
+
+            const resolved = config.expressions[tagOrName];
+            return resolved || tagOrName;
+        }
+
         // --- Logic Functions ---
 
         function loadCurrentModel() {
@@ -329,13 +339,24 @@
                         break;
 
                     case 'WS_PAYLOAD':
-                        const payload = data.data; // data was passed as payload
-                        if (!payload) return;
+                        // Compatibility:
+                        // old bridge: { cmd:'WS_PAYLOAD', data:{ data:{...} } }
+                        // new secure bridge: { cmd:'WS_PAYLOAD', data:{...} }
+                        const payload = (data && typeof data === 'object' && data.data && typeof data.data === 'object')
+                            ? data.data
+                            : data;
+                        if (!payload || typeof payload !== 'object') {
+                            console.warn('[Live2D WS] Invalid WS_PAYLOAD payload:', data);
+                            return;
+                        }
+                        console.log('[Live2D WS] Received payload:', payload);
 
                         const processCommands = () => {
                             // 2. Change Expression
                             if (payload.expression) {
-                                helper.setExpression(payload.expression, 0);
+                                const currentName = MODELS[currentModelIndex].name;
+                                const expressionName = resolveExpression(currentName, payload.expression);
+                                helper.setExpression(expressionName, 0);
                             }
 
                             // 3. Play Motion
