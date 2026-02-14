@@ -158,9 +158,44 @@
         const helper = new Live2DHelper({ canvas: canvas.id });
         window.live2dExtensionHelper = helper;
 
+        // Global config
+        let modelsConfig = [];
+        let isModelLoading = false;
+        let pendingCommands = [];
+
+        function loadModelsJson() {
+            const url = getFullUrl('models.json');
+            console.log('[Live2D] Loading models.json from:', url);
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    modelsConfig = data;
+                    console.log('[Live2D] models.json loaded, count:', modelsConfig.length);
+                })
+                .catch(e => console.error('[Live2D] Failed to load models.json', e));
+        }
+
+        // Helper to resolve tag
+        function resolveMotion(modelName, tagOrName) {
+            if (!tagOrName || !tagOrName.startsWith('tag_')) return tagOrName;
+
+            const config = modelsConfig.find(m => m.name === modelName);
+            if (!config || !config.motions) return tagOrName;
+
+            const resolved = config.motions[tagOrName];
+            return resolved || tagOrName;
+        }
+
         // --- Logic Functions ---
 
         function loadCurrentModel() {
+            if (isModelLoading) {
+                console.log('[Live2D] Already loading...');
+                // We could cancel previous? For now just let it finish.
+                // But changing currentModelIndex means the previous load might confuse things?
+                // Live2DHelper handles one model at a time usually.
+            }
+            isModelLoading = true;
             const modelConfig = MODELS[currentModelIndex];
 
             // Release old models
@@ -176,9 +211,24 @@
                 console.error('Error releasing models:', e);
             }
 
+            console.log('[Live2D] Loading model:', modelConfig.name);
             helper.loadModel(getFullUrl(modelConfig.path), (model) => {
                 console.log('Model loaded:', modelConfig.name);
                 broadcastState(); // Notify popup
+
+                // Grace period for SDK
+                setTimeout(() => {
+                    console.log('[Live2D] Model Ready. Processing queue:', pendingCommands.length);
+                    isModelLoading = false;
+                    while (pendingCommands.length > 0) {
+                        const cmd = pendingCommands.shift();
+                        try {
+                            cmd();
+                        } catch (e) {
+                            console.error('Error processing queued command:', e);
+                        }
+                    }
+                }, 800);
             });
         }
 
@@ -273,6 +323,7 @@
                             // Auto-hide after 5 seconds
                             if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
                             window.bubbleTimeout = setTimeout(() => {
+                                bubble.style.display = 'none';
                             }, 5000);
                         }
                         break;
@@ -281,63 +332,111 @@
                         const payload = data.data; // data was passed as payload
                         if (!payload) return;
 
+                        const processCommands = () => {
+                            // 2. Change Expression
+                            if (payload.expression) {
+                                helper.setExpression(payload.expression, 0);
+                            }
+
+                            // 3. Play Motion
+                            if (payload.motion) {
+                                let group = payload.motion;
+                                let index = 0;
+
+                                // 1. Attempt Tag Resolution
+                                const currentName = MODELS[currentModelIndex].name;
+                                group = resolveMotion(currentName, group);
+
+                                console.log('[Live2D WS] Processing motion:', group);
+
+                                // Support "group:index" format (e.g., "idle:2")
+                                if (typeof group === 'string' && group.includes(':')) {
+                                    const parts = group.split(':');
+                                    group = parts[0];
+                                    index = parseInt(parts[1], 10) || 0;
+                                }
+
+                                if (helper) {
+                                    // Verify internal model availability
+                                    try {
+                                        const mgr = helper.live2DMgr;
+                                        const model = mgr ? mgr.getModel(0) : null;
+
+                                        if (model) {
+                                            // Validate Group Exists
+                                            const modelSettings = model.modelSetting;
+                                            const count = modelSettings ? modelSettings.getMotionNum(group) : 0;
+
+                                            if (count > 0) {
+                                                console.log('[Live2D WS] Starting motion on Model 0:', group, index);
+                                                // DIRECTLY call startMotion on the LAppModel instance.
+                                                // Arguments are: (motionGroup, motionIndex, priority)
+                                                model.startMotion(group, index, 3);
+                                            } else {
+                                                console.error('[Live2D WS] Invalid motion group (or no motions):', group);
+                                            }
+                                        } else {
+                                            console.warn('[Live2D WS] Model 0 not ready yet.');
+                                        }
+                                    } catch (e) {
+                                        console.error('[Live2D WS] Error in startMotion:', e);
+                                    }
+                                } else {
+                                    console.error('[Live2D WS] Helper is undefined:', helper);
+                                }
+                            }
+
+                            // 4. Show Message
+                            if (payload.message) {
+                                const bubble = document.getElementById('live2d-bubble');
+                                if (bubble) {
+                                    bubble.innerHTML = '';
+                                    bubble.appendChild(document.createTextNode(payload.message));
+                                    const newTail = document.createElement('div');
+                                    newTail.style.position = 'absolute';
+                                    newTail.style.bottom = '-10px';
+                                    newTail.style.left = '50%';
+                                    newTail.style.marginLeft = '-10px';
+                                    newTail.style.width = '0';
+                                    newTail.style.height = '0';
+                                    newTail.style.borderLeft = '10px solid transparent';
+                                    newTail.style.borderRight = '10px solid transparent';
+                                    newTail.style.borderTop = '10px solid rgba(255, 255, 255, 0.5)';
+                                    bubble.appendChild(newTail);
+
+                                    bubble.style.display = 'block';
+                                    if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
+                                    window.bubbleTimeout = setTimeout(() => {
+                                        bubble.style.display = 'none';
+                                    }, 5000);
+                                }
+                            }
+                        };
+
                         // 1. Switch Model (if specified and different)
                         if (payload.model) {
                             const foundIndex = MODELS.findIndex(m => m.name === payload.model);
                             if (foundIndex !== -1 && foundIndex !== currentModelIndex) {
+                                console.log('[Live2D WS] Switching model to:', payload.model);
                                 currentModelIndex = foundIndex;
-                                loadCurrentModel(); // This is async! Be careful with subsequent commands.
-                                // If we switch, we might need to delay specific motion commands?
-                                // For simplicity, we fire them, but they might apply to the OLD model if load isn't instant.
-                                // Or they might apply to the NEW model once loaded if we queue them.
-                                // simpler: fire immediately. Users should wait for load.
+                                // Add commands to queue
+                                pendingCommands.push(processCommands);
+                                loadCurrentModel(); // Triggers load, sets isLoading=true
+                            } else {
+                                // Same model
+                                if (isModelLoading) {
+                                    console.log('[Live2D WS] Model loading, queuing commands.');
+                                    pendingCommands.push(processCommands);
+                                } else {
+                                    processCommands();
+                                }
                             }
-                        }
-
-                        // 2. Change Expression
-                        if (payload.expression) {
-                            helper.setExpression(payload.expression, 0);
-                        }
-
-                        // 3. Play Motion
-                        if (payload.motion) {
-                            // Find group index? Helper wrapper usually expects (group, index).
-                            // If user sends Just "motion": "tap_body", assume index 0 or random?
-                            // Let's assume index 0 for simplicity if "motion" is just a string group name.
-                            // If they pass an object {group: 'tap', index: 1}, that's better but protocol says string.
-                            // We will default to index 0.
-                            // However, we should check if the group exists.
-                            // The helper.startMotion(group, no, priority)
-                            helper.startMotion(payload.motion, 0, 3); // Priority 3 = force
-                        }
-
-                        // 4. Show Message
-                        if (payload.message) {
-                            // Re-use the SHOW_MESSAGE logic - DRY violation but robust here to keep scope clean
-                            // Or trigger a self-command?
-                            // Let's just execute the display logic directly or refactor showMessage function.
-                            // For speed, I'll copy the bubble logic. It's safe.
-                            const bubble = document.getElementById('live2d-bubble');
-                            if (bubble) {
-                                bubble.innerHTML = '';
-                                bubble.appendChild(document.createTextNode(payload.message));
-                                const newTail = document.createElement('div');
-                                newTail.style.position = 'absolute';
-                                newTail.style.bottom = '-10px';
-                                newTail.style.left = '50%';
-                                newTail.style.marginLeft = '-10px';
-                                newTail.style.width = '0';
-                                newTail.style.height = '0';
-                                newTail.style.borderLeft = '10px solid transparent';
-                                newTail.style.borderRight = '10px solid transparent';
-                                newTail.style.borderTop = '10px solid rgba(255, 255, 255, 0.5)';
-                                bubble.appendChild(newTail);
-
-                                bubble.style.display = 'block';
-                                if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
-                                window.bubbleTimeout = setTimeout(() => {
-                                    bubble.style.display = 'none';
-                                }, 5000);
+                        } else {
+                            if (isModelLoading) {
+                                console.log('[Live2D WS] Model loading, queuing commands (no model switch).');
+                                pendingCommands.push(processCommands);
+                            } else {
+                                processCommands();
                             }
                         }
                         break;
@@ -348,6 +447,7 @@
 
 
         // Initial Load
+        loadModelsJson();
         loadCurrentModel();
     }
 

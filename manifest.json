@@ -33,6 +33,7 @@
                 "dist/live2d-helper.min.js",
                 "init-live2d.js",
                 "patch-live2d-helper.js",
+                "models.json",
                 "assets/**"
             ],
             "matches": [
