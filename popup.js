@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const whitelistInput = document.getElementById('whitelist-input');
     const whitelistStatusEl = document.getElementById('whitelist-status');
     const whitelistListEl = document.getElementById('whitelist-list');
+    const langSelect = document.getElementById('lang-select');
 
     const btnSwitch = document.getElementById('btn-switch');
     const btnFollow = document.getElementById('btn-follow');
@@ -34,6 +35,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let keyPair = await window.Live2DSecurity.ensureKeyPair();
     let whitelist = await window.Live2DSecurity.getWhitelist();
+    let currentLang = await window.Live2DI18n.loadSavedLang();
+    window.Live2DI18n.applyToDom(currentLang);
+
+    function t(key) {
+        return window.Live2DI18n.t(key, currentLang);
+    }
 
     function getActiveTab(callback) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -50,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         log('sendToTab ->', cmd, data);
         getActiveTab((tab, tabError) => {
             if (!tab) {
-                statusEl.textContent = 'No active tab found.';
+                statusEl.textContent = t('status_no_tab');
                 warn('sendToTab failed:', tabError, 'cmd=', cmd);
                 if (onResponse) {
                     onResponse(null);
@@ -69,10 +76,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (chrome.runtime.lastError) {
                     const message = chrome.runtime.lastError.message || 'Unknown runtime error';
                     const isNoReceiver = /Receiving end does not exist/i.test(message);
-                    statusEl.textContent = 'Error: open/refresh x.com page first.';
+                    statusEl.textContent = t('status_refresh_page');
                     updateWsStatus({
                         status: 'unavailable',
-                        detail: isNoReceiver ? 'No content script receiver. Open x.com and refresh once.' : message
+                        detail: isNoReceiver ? t('ws_no_receiver') : message
                     });
                     warn('sendMessage runtime error:', message, 'cmd=', cmd, 'tab=', tabId);
                     if (onResponse) {
@@ -90,12 +97,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateWsStatus(info) {
         if (!info) {
-            wsStatusEl.textContent = 'Status: unavailable (no response from page)';
+            wsStatusEl.textContent = t('ws_no_response');
             return;
         }
+        const statusKey = `ws_state_${String(info.status || '').toLowerCase()}`;
+        const localizedStatus = t(statusKey) === statusKey ? String(info.status || 'unknown') : t(statusKey);
         const detail = info.detail ? ` (${info.detail})` : '';
-        const reg = info.registered ? ' registered' : '';
-        wsStatusEl.textContent = `Status: ${info.status}${reg}${detail}`;
+        const reg = info.registered ? ` ${t('ws_registered')}` : '';
+        wsStatusEl.textContent = `${t('ws_status_label')}: ${localizedStatus}${reg}${detail}`;
         if (info.url) {
             wsUrlInput.value = info.url;
         }
@@ -145,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderWhitelist() {
         whitelistListEl.innerHTML = '';
         if (whitelist.length === 0) {
-            whitelistListEl.textContent = 'No trusted sender key.';
+            whitelistListEl.textContent = t('whitelist_none');
             whitelistListEl.className = 'small';
             return;
         }
@@ -166,12 +175,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             keyBox.title = displayKey;
 
             const btnRemove = document.createElement('button');
-            btnRemove.textContent = 'Delete';
+            btnRemove.textContent = t('btn_delete');
             btnRemove.onclick = async () => {
                 whitelist = whitelist.filter((_, i) => i !== index);
                 whitelist = await window.Live2DSecurity.saveWhitelist(whitelist);
                 renderWhitelist();
-                whitelistStatusEl.textContent = 'Whitelist updated.';
+                whitelistStatusEl.textContent = t('status_whitelist_updated');
                 log('Whitelist key removed. total=', whitelist.length);
             };
 
@@ -192,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (message.type === 'LIVE2D_STATE_UPDATE') {
             updateUI(message.data || {});
-            statusEl.textContent = 'Connected.';
+            statusEl.textContent = t('status_connected');
             return;
         }
         if (message.type === 'WS_CONNECTION_STATUS') {
@@ -219,8 +228,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const url = wsUrlInput.value.trim();
         log('Saving WS URL:', url);
         chrome.storage.local.set({ wsUrl: url }, () => {
-            sendToTab('UPDATE_WS_CONFIG', { url }, () => {
-                statusEl.textContent = 'WebSocket URL saved.';
+        sendToTab('UPDATE_WS_CONFIG', { url }, () => {
+                statusEl.textContent = t('status_ws_saved');
             });
         });
     };
@@ -229,7 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const url = wsUrlInput.value.trim();
         log('Connect clicked, url=', url);
         sendToTab('CONNECT_WS', { url }, () => {
-            statusEl.textContent = 'Connecting WebSocket...';
+            statusEl.textContent = t('status_ws_connecting');
             setTimeout(() => {
                 sendToTab('GET_WS_STATUS', {}, (response) => updateWsStatus(response || null));
             }, 500);
@@ -239,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnDisconnectWs.onclick = () => {
         log('Disconnect clicked');
         sendToTab('DISCONNECT_WS', {}, () => {
-            statusEl.textContent = 'Disconnect requested.';
+            statusEl.textContent = t('status_ws_disconnect_req');
             setTimeout(() => {
                 sendToTab('GET_WS_STATUS', {}, (response) => updateWsStatus(response || null));
             }, 300);
@@ -249,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnCopyPub.onclick = async () => {
         await navigator.clipboard.writeText(window.Live2DSecurity.publicKeyBase64ToBase58(keyPair.publicKey));
         log('Public key copied');
-        statusEl.textContent = 'Public key copied.';
+        statusEl.textContent = t('status_pub_copied');
     };
 
     btnExportPriv.onclick = () => {
@@ -267,13 +276,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         a.click();
         URL.revokeObjectURL(url);
         log('Private key exported');
-        statusEl.textContent = 'Private key exported.';
+        statusEl.textContent = t('status_priv_exported');
     };
 
     btnAddWhitelist.onclick = async () => {
         const input = whitelistInput.value.trim();
         if (!input) {
-            whitelistStatusEl.textContent = 'Please input a public key.';
+            whitelistStatusEl.textContent = t('status_whitelist_need_input');
             return;
         }
 
@@ -283,21 +292,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (window.Live2DSecurity.isValidPublicKey(input)) {
             normalizedBase64 = input;
         } else {
-            whitelistStatusEl.textContent = 'Invalid public key format.';
+            whitelistStatusEl.textContent = t('status_whitelist_invalid');
             warn('Rejected whitelist key: invalid format');
             return;
         }
         if (whitelist.includes(normalizedBase64)) {
-            whitelistStatusEl.textContent = 'Key already in whitelist.';
+            whitelistStatusEl.textContent = t('status_whitelist_exists');
             return;
         }
 
         whitelist.push(normalizedBase64);
         whitelist = await window.Live2DSecurity.saveWhitelist(whitelist);
         whitelistInput.value = '';
-        whitelistStatusEl.textContent = 'Key added.';
+        whitelistStatusEl.textContent = t('status_whitelist_added');
         log('Whitelist key added. total=', whitelist.length);
         renderWhitelist();
+    };
+
+    langSelect.value = currentLang;
+    langSelect.onchange = async () => {
+        currentLang = await window.Live2DI18n.saveLang(langSelect.value);
+        window.Live2DI18n.applyToDom(currentLang);
+        renderWhitelist();
+        statusEl.textContent = t('popup_connecting_page');
+        sendToTab('GET_WS_STATUS', {}, (response) => updateWsStatus(response || null));
     };
 
     chrome.storage.local.get(['wsUrl'], (result) => {

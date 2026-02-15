@@ -106,74 +106,91 @@
 </head>
 
 <body>
-    <h2>Live2D Secure Control</h2>
+    <div class="section" style="margin-bottom: 8px;">
+        <div class="row" style="justify-content: space-between;">
+            <h2 data-i18n="popup_title" style="margin:0;">Live2D Secure Control</h2>
+            <div class="row" style="width: 140px;">
+                <label for="lang-select" class="small" data-i18n="language_label">Language</label>
+                <select id="lang-select"
+                    style="flex:1; border-radius:4px; border:1px solid #444; background:#222; color:#eee; padding:4px; font-size:12px;">
+                    <option value="en">English</option>
+                    <option value="zh-CN">简体中文</option>
+                    <option value="zh-TW">繁體中文</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
     <div class="section">
-        <div class="section-title">Plugin Keys (Base58)</div>
+        <div class="section-title" data-i18n="section_keys">Plugin Keys (Base58)</div>
         <div id="public-key" class="mono"></div>
         <div class="row" style="margin-top: 6px;">
-            <button id="btn-copy-pub">Copy Public Key</button>
-            <button id="btn-export-priv">Export Private Key</button>
+            <button id="btn-copy-pub" data-i18n="btn_copy_pub">Copy Public Key</button>
+            <button id="btn-export-priv" data-i18n="btn_export_priv">Export Private Key</button>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">WebSocket</div>
+        <div class="section-title" data-i18n="section_ws">WebSocket</div>
         <div class="row" style="margin-bottom: 6px;">
             <input type="text" id="ws-url-input" placeholder="ws://localhost:8080">
-            <button id="btn-save-ws">Save</button>
+            <button id="btn-save-ws" data-i18n="btn_save">Save</button>
         </div>
         <div class="row">
-            <button id="btn-connect-ws">Connect</button>
-            <button id="btn-disconnect-ws">Disconnect</button>
-            <span id="ws-status" class="small">Status: unknown</span>
+            <button id="btn-connect-ws" data-i18n="btn_connect">Connect</button>
+            <button id="btn-disconnect-ws" data-i18n="btn_disconnect">Disconnect</button>
+            <span id="ws-status" class="small" data-i18n="ws_status_unknown">Status: unknown</span>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">Whitelist Public Keys</div>
-        <textarea id="whitelist-input" placeholder="Paste sender public key (Base58 preferred, Base64 also accepted)"></textarea>
+        <div class="section-title" data-i18n="section_whitelist">Whitelist Public Keys</div>
+        <textarea id="whitelist-input"
+            data-i18n-placeholder="whitelist_placeholder"
+            placeholder="Paste sender public key (Base58 preferred, Base64 also accepted)"></textarea>
         <div class="row" style="margin-top: 6px;">
-            <button id="btn-add-whitelist">Add Key</button>
+            <button id="btn-add-whitelist" data-i18n="btn_add_key">Add Key</button>
             <span id="whitelist-status" class="small"></span>
         </div>
         <div id="whitelist-list" style="margin-top: 8px;"></div>
     </div>
 
     <div class="section">
-        <div class="section-title">General</div>
+        <div class="section-title" data-i18n="section_general">General</div>
         <div class="btn-grid">
-            <button id="btn-switch">Switch Model</button>
-            <button id="btn-follow">Toggle Follow</button>
-            <button id="btn-voice">Play Voice</button>
+            <button id="btn-switch" data-i18n="btn_switch">Switch Model</button>
+            <button id="btn-follow" data-i18n="btn_follow">Toggle Follow</button>
+            <button id="btn-voice" data-i18n="btn_voice">Play Voice</button>
         </div>
         <div style="margin-top: 8px; font-size: 12px;">
-            Current: <span id="model-name-display">Loading...</span>
+            <span data-i18n="current_model">Current:</span> <span id="model-name-display">Loading...</span>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">Message</div>
+        <div class="section-title" data-i18n="section_message">Message</div>
         <div class="row">
-            <input type="text" id="msg-input" placeholder="Type a message...">
-            <button id="btn-send-msg">Send</button>
+            <input type="text" id="msg-input" data-i18n-placeholder="msg_placeholder" placeholder="Type a message...">
+            <button id="btn-send-msg" data-i18n="btn_send">Send</button>
         </div>
     </div>
 
     <div class="section" id="expressions-section" style="display:none;">
-        <div class="section-title">Expressions</div>
+        <div class="section-title" data-i18n="section_expressions">Expressions</div>
         <div class="btn-grid" id="expressions-grid"></div>
     </div>
 
     <div class="section" id="motions-section" style="display:none;">
-        <div class="section-title">Motions</div>
+        <div class="section-title" data-i18n="section_motions">Motions</div>
         <div class="btn-grid" id="motions-grid"></div>
     </div>
 
-    <div id="status-msg" class="small">Connecting to page...</div>
+    <div id="status-msg" class="small" data-i18n="popup_connecting_page">Connecting to page...</div>
 
     <script src="lib/tweetnacl.min.js"></script>
     <script src="security-utils.js"></script>
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
 </body>
 

@@ -160,6 +160,7 @@
 
         // Global config
         let modelsConfig = [];
+        let modelsConfigLoaded = false;
         let isModelLoading = false;
         let pendingCommands = [];
 
@@ -170,7 +171,10 @@
                 .then(r => r.json())
                 .then(data => {
                     modelsConfig = data;
+                    modelsConfigLoaded = true;
                     console.log('[Live2D] models.json loaded, count:', modelsConfig.length);
+                    // Refresh popup actions after tag mapping is available.
+                    broadcastState();
                 })
                 .catch(e => console.error('[Live2D] Failed to load models.json', e));
         }
@@ -194,6 +198,23 @@
 
             const resolved = config.expressions[tagOrName];
             return resolved || tagOrName;
+        }
+
+        function parseMotionSpec(spec) {
+            if (typeof spec !== 'string' || !spec) {
+                return null;
+            }
+            if (spec.includes(':')) {
+                const parts = spec.split(':');
+                return {
+                    group: parts[0],
+                    index: parseInt(parts[1], 10) || 0
+                };
+            }
+            return {
+                group: spec,
+                index: 0
+            };
         }
 
         // --- Logic Functions ---
@@ -251,11 +272,39 @@
                 motions: []
             };
 
+            // Prefer tag-based motions from models.json for popup button display.
+            const currentModelName = MODELS[currentModelIndex].name;
+            const configModel = modelsConfig.find(m => m.name === currentModelName);
+            if (configModel && configModel.motions && typeof configModel.motions === 'object') {
+                const tags = Object.keys(configModel.motions).sort((a, b) => {
+                    const na = parseInt(String(a).replace('tag_', ''), 10);
+                    const nb = parseInt(String(b).replace('tag_', ''), 10);
+                    if (Number.isFinite(na) && Number.isFinite(nb)) {
+                        return na - nb;
+                    }
+                    return String(a).localeCompare(String(b));
+                });
+
+                tags.forEach(tag => {
+                    const resolved = configModel.motions[tag];
+                    const parsed = parseMotionSpec(resolved);
+                    if (!parsed) {
+                        return;
+                    }
+                    state.motions.push({
+                        group: parsed.group,
+                        index: parsed.index,
+                        label: `${tag}`
+                    });
+                });
+            }
+
             if (internalModel) {
                 if (internalModel.expressions) {
                     state.expressions = Object.keys(internalModel.expressions);
                 }
-                if (internalModel.modelSetting) {
+                // Fallback only when models.json is not ready yet, or model has no mapping entry.
+                if (internalModel.modelSetting && state.motions.length === 0 && (!modelsConfigLoaded || !configModel)) {
                     const groups = ['', 'idle', 'tap_body', 'tapBody', 'flick_head', 'flickHead', 'pinch_in', 'pinchIn', 'pinch_out', 'pinchOut', 'shake', 'null'];
                     groups.forEach(group => {
                         const count = internalModel.modelSetting.getMotionNum(group);
