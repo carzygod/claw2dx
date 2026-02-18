@@ -9,7 +9,6 @@
         { name: 'Koharu', path: 'assets/models/koharu/koharu.model.json' },
         { name: 'Shizuku', path: 'assets/models/shizuku/shizuku.model.json' },
         { name: 'Wanko', path: 'assets/models/wanko/wanko.model.json' },
-        { name: 'Haru02', path: 'assets/models/haru02/haru02.model.json' },
         { name: 'Izumi', path: 'assets/models/izumi/izumi.model.json' },
 
         // --- fghrsh/live2d_api Models ---
@@ -217,6 +216,82 @@
             };
         }
 
+        function buildMotionGroupCandidates(group) {
+            const candidates = [];
+            const add = (v) => {
+                if (!v || candidates.includes(v)) return;
+                candidates.push(v);
+            };
+            add(group);
+
+            if (typeof group === 'string') {
+                // snake_case -> camelCase
+                add(group.replace(/_([a-z])/g, (_, c) => c.toUpperCase()));
+                // camelCase -> snake_case
+                add(group.replace(/[A-Z]/g, (c) => '_' + c.toLowerCase()));
+            }
+            return candidates;
+        }
+
+        function startMotionSafe(group, index, priority = 3, source = 'unknown') {
+            try {
+                const mgr = helper.live2DMgr;
+                const model = mgr ? mgr.getModel(0) : null;
+
+                if (!model || !model.modelSetting) {
+                    console.warn(`[Live2D ${source}] Model not ready for motion`, group, index);
+                    return false;
+                }
+
+                const candidates = buildMotionGroupCandidates(group);
+                for (const candidate of candidates) {
+                    const count = model.modelSetting.getMotionNum(candidate);
+                    if (count > 0) {
+                        const safeIndex = Math.max(0, Math.min(index, count - 1));
+                        console.log(`[Live2D ${source}] startMotion`, candidate, safeIndex, `(${count} total)`);
+                        model.startMotion(candidate, safeIndex, priority);
+                        return true;
+                    }
+                }
+
+                console.error(`[Live2D ${source}] Invalid motion group`, group, 'candidates=', candidates);
+                return false;
+            } catch (e) {
+                console.error(`[Live2D ${source}] startMotion error`, e);
+                return false;
+            }
+        }
+
+        function setExpressionSafe(name, source = 'unknown') {
+            try {
+                const mgr = helper.live2DMgr;
+                const model = mgr ? mgr.getModel(0) : null;
+                let finalName = name;
+
+                if (model && model.expressions && typeof model.expressions === 'object') {
+                    const keys = Object.keys(model.expressions);
+                    if (!keys.includes(finalName)) {
+                        const noExt = String(name).replace(/(\.exp)?\.json$/i, '');
+                        if (keys.includes(noExt)) {
+                            finalName = noExt;
+                        } else {
+                            const withExt = `${noExt}.exp.json`;
+                            if (keys.includes(withExt)) {
+                                finalName = withExt;
+                            }
+                        }
+                    }
+                }
+
+                console.log(`[Live2D ${source}] setExpression`, finalName);
+                helper.setExpression(finalName, 0);
+                return true;
+            } catch (e) {
+                console.error(`[Live2D ${source}] setExpression error`, e);
+                return false;
+            }
+        }
+
         // --- Logic Functions ---
 
         function loadCurrentModel() {
@@ -349,10 +424,20 @@
                         new Audio(sndUrl).play().catch(e => console.log(e));
                         break;
                     case 'SET_EXPRESSION':
-                        helper.setExpression(data.name, 0);
+                        if (isModelLoading) {
+                            console.log('[Live2D UI] Model loading, queue expression:', data.name);
+                            pendingCommands.push(() => setExpressionSafe(data.name, 'UI'));
+                        } else {
+                            setExpressionSafe(data.name, 'UI');
+                        }
                         break;
                     case 'START_MOTION':
-                        helper.startMotion(data.group, data.index, 0);
+                        if (isModelLoading) {
+                            console.log('[Live2D UI] Model loading, queue motion:', data.group, data.index);
+                            pendingCommands.push(() => startMotionSafe(data.group, data.index, 3, 'UI'));
+                        } else {
+                            startMotionSafe(data.group, data.index, 3, 'UI');
+                        }
                         break;
                     case 'SHOW_MESSAGE':
                         const bubble = document.getElementById('live2d-bubble');
@@ -405,7 +490,7 @@
                             if (payload.expression) {
                                 const currentName = MODELS[currentModelIndex].name;
                                 const expressionName = resolveExpression(currentName, payload.expression);
-                                helper.setExpression(expressionName, 0);
+                                setExpressionSafe(expressionName, 'WS');
                             }
 
                             // 3. Play Motion
@@ -426,34 +511,7 @@
                                     index = parseInt(parts[1], 10) || 0;
                                 }
 
-                                if (helper) {
-                                    // Verify internal model availability
-                                    try {
-                                        const mgr = helper.live2DMgr;
-                                        const model = mgr ? mgr.getModel(0) : null;
-
-                                        if (model) {
-                                            // Validate Group Exists
-                                            const modelSettings = model.modelSetting;
-                                            const count = modelSettings ? modelSettings.getMotionNum(group) : 0;
-
-                                            if (count > 0) {
-                                                console.log('[Live2D WS] Starting motion on Model 0:', group, index);
-                                                // DIRECTLY call startMotion on the LAppModel instance.
-                                                // Arguments are: (motionGroup, motionIndex, priority)
-                                                model.startMotion(group, index, 3);
-                                            } else {
-                                                console.error('[Live2D WS] Invalid motion group (or no motions):', group);
-                                            }
-                                        } else {
-                                            console.warn('[Live2D WS] Model 0 not ready yet.');
-                                        }
-                                    } catch (e) {
-                                        console.error('[Live2D WS] Error in startMotion:', e);
-                                    }
-                                } else {
-                                    console.error('[Live2D WS] Helper is undefined:', helper);
-                                }
+                                startMotionSafe(group, index, 3, 'WS');
                             }
 
                             // 4. Show Message
