@@ -2,6 +2,7 @@
     const SCRIPT_ID = 'live2d-extension-init-script';
     const ROOT_ID = 'live2d-extension-root';
     const TOGGLE_BTN_ID = 'live2d-toggle-btn';
+    const MODEL_STORAGE_KEY = 'live2d_extension_current_model_v1';
 
     // Model Definitions (Full List)
     const MODELS = [
@@ -16,13 +17,8 @@
         { name: 'Tia', path: 'assets/models/Potion-Maker/Tia/index.json' },
         { name: '22 (Bilibili)', path: 'assets/models/bilibili-live/22/index.json' },
         { name: '33 (Bilibili)', path: 'assets/models/bilibili-live/33/index.json' },
-        { name: 'Shizuku 48', path: 'assets/models/ShizukuTalk/shizuku-48/index.json' },
-        { name: 'Shizuku Pajama', path: 'assets/models/ShizukuTalk/shizuku-pajama/index.json' },
         { name: 'Neptune Classic', path: 'assets/models/HyperdimensionNeptunia/neptune_classic/index.json' },
-        { name: 'NepNep', path: 'assets/models/HyperdimensionNeptunia/nepnep/index.json' },
-        { name: 'Neptune Santa', path: 'assets/models/HyperdimensionNeptunia/neptune_santa/index.json' },
         { name: 'NepMaid', path: 'assets/models/HyperdimensionNeptunia/nepmaid/index.json' },
-        { name: 'NepSwim', path: 'assets/models/HyperdimensionNeptunia/nepswim/index.json' },
 
         // Kantai Collection
         { name: 'Murakumo', path: 'assets/models/KantaiCollection/murakumo/index.json' }
@@ -32,7 +28,30 @@
     // (Simulating the previous state where I removed them)
     // For safety, I will rely on the indexes I know are good.
 
-    let currentModelIndex = 0;
+    function getSavedModelIndex() {
+        try {
+            const savedName = localStorage.getItem(MODEL_STORAGE_KEY);
+            if (!savedName) {
+                return 0;
+            }
+            const idx = MODELS.findIndex(m => m.name === savedName);
+            return idx >= 0 ? idx : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    function persistCurrentModel() {
+        try {
+            if (MODELS[currentModelIndex]) {
+                localStorage.setItem(MODEL_STORAGE_KEY, MODELS[currentModelIndex].name);
+            }
+        } catch (e) {
+            // ignore storage failures
+        }
+    }
+
+    let currentModelIndex = getSavedModelIndex();
     const SOUND_PATH = 'assets/sound/friend_06.ogg';
     let headFollowing = false;
     let isModelVisible = true;
@@ -303,6 +322,7 @@
             }
             isModelLoading = true;
             const modelConfig = MODELS[currentModelIndex];
+            persistCurrentModel();
 
             // Release old models
             try {
@@ -413,6 +433,7 @@
                         break;
                     case 'SWITCH_MODEL':
                         currentModelIndex = (currentModelIndex + 1) % MODELS.length;
+                        persistCurrentModel();
                         loadCurrentModel();
                         break;
                     case 'TOGGLE_FOLLOW':
@@ -547,6 +568,7 @@
                             if (foundIndex !== -1 && foundIndex !== currentModelIndex) {
                                 console.log('[Live2D WS] Switching model to:', payload.model);
                                 currentModelIndex = foundIndex;
+                                persistCurrentModel();
                                 // Add commands to queue
                                 pendingCommands.push(processCommands);
                                 loadCurrentModel(); // Triggers load, sets isLoading=true
